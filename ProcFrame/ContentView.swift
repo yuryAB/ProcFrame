@@ -5,79 +5,73 @@
 //  Created by yury antony on 24/01/25.
 //
 
+import Foundation
 import SwiftUI
-import CoreData
+import SpriteKit
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
+    @State private var spriteScene = CustomSpriteScene(size: CGSize(width: 650, height: 550))
 
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            VStack(spacing: 2) {
+                PanelView(color: Color(nsColor: .controlColor))
+                    .frame(height: 40)
+                    .frame(maxWidth: .infinity)
+
+                HStack(spacing: 0) {
+                    MediaPanelView(
+                        color: Color(nsColor: .controlColor),
+                        onAddToScene: { selectedImages in
+                            spriteScene.addImagesAsNodes(images: selectedImages)
+                        }
+                    )
+                    .frame(width: 160)
+
+                    Spacer()
+                    SpriteCanvasView(spriteScene: spriteScene)
+                    Spacer()
+
+                    PanelView(color: Color(nsColor: .controlColor))
+                        .frame(width: 300)
                 }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-            Text("Select an item")
-        }
-    }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 5)
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                PanelView(color: Color(nsColor: .controlColor))
+                    .frame(height: 120)
+                    .frame(maxWidth: .infinity)
             }
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            .frame(maxHeight: .infinity)
+            .padding()
         }
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
+struct SpriteCanvasView: View {
+    let spriteScene: CustomSpriteScene
 
-#Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    var body: some View {
+        ZStack {
+            ScrollableView { scrollDelta in
+                spriteScene.simulateScroll(deltaY: scrollDelta)
+            }
+            SpriteView(scene: spriteScene)
+        }
+        .frame(width: 700, height: 600)
+        //.background(Color(nsColor: .controlColor))
+    }
+}
+
+struct PanelView: View {
+    let color: Color
+
+    var body: some View {
+        Rectangle()
+            .fill(color)
+            .cornerRadius(8)
+            .shadow(radius: 4)
+    }
 }

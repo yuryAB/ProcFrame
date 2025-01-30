@@ -17,58 +17,67 @@ struct MediaPanelView: View {
     
     var body: some View {
         VStack(spacing: 3) {
-            Button(action: importImages) {
-                Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .symbolRenderingMode(.hierarchical)
-                    .padding(4)
-                    .symbolEffect(.bounce.up.byLayer, options: .nonRepeating)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
-            
-            List {
-                ForEach(images) { image in
-                    SelectableRow(
-                        image: image,
-                        isSelected: selectedImages.contains(image.id)
-                    ) {
-                        toggleSelection(for: image.id)
-                    }
-                }
-            }
-            .cornerRadius(8)
-            
-            HStack {
-                SelectAllButton(
-                    isChecked: Binding(
-                        get: { selectedImages.count == images.count && !images.isEmpty },
-                        set: { isChecked in toggleSelectAll(isChecked) }
-                    )
-                )
-                .disabled(images.isEmpty)
-                
-                AddToSceneButton(isChecked: .constant(!selectedImages.isEmpty)) {
-                    let selected = images.filter { selectedImages.contains($0.id) }
-                    onAddToScene?(selected)
-                }
-                .disabled(selectedImages.isEmpty)
-                
-                MoveToTrashButton(isChecked: .constant(!selectedImages.isEmpty))
-                .disabled(selectedImages.isEmpty)
-            }
-            .frame(maxWidth: .infinity)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
+            importButton()
+            imageList()
+            actionButtons()
         }
         .padding(4)
         .background(color)
         .cornerRadius(8)
     }
-
+    
+    private func importButton() -> some View {
+        Button(action: importImages) {
+            Image(systemName: "folder.badge.plus")
+                .font(.system(size: 15))
+                .foregroundColor(.white)
+                .symbolRenderingMode(.hierarchical)
+                .padding(4)
+                .symbolEffect(.bounce.up.byLayer, options: .nonRepeating)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+    }
+    
+    private func imageList() -> some View {
+        List {
+            ForEach(images) { image in
+                SelectableRow(
+                    image: image,
+                    isSelected: selectedImages.contains(image.id),
+                    onTap: { toggleSelection(for: image.id) }
+                )
+            }
+        }
+        .cornerRadius(8)
+    }
+    
+    private func actionButtons() -> some View {
+        HStack {
+            SelectAllButton(
+                isChecked: Binding(
+                    get: { selectedImages.count == images.count && !images.isEmpty },
+                    set: { isChecked in toggleSelectAll(isChecked) }
+                )
+            )
+            .disabled(images.isEmpty)
+            
+            AddToSceneButton(isChecked: .constant(!selectedImages.isEmpty)) {
+                let selected = images.filter { selectedImages.contains($0.id) }
+                onAddToScene?(selected)
+            }
+            .disabled(selectedImages.isEmpty)
+            
+            MoveToTrashButton(isChecked: .constant(!selectedImages.isEmpty))
+            .disabled(selectedImages.isEmpty)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+    }
+    
     private func toggleSelection(for id: UUID) {
         if selectedImages.contains(id) {
             selectedImages.remove(id)
@@ -78,11 +87,7 @@ struct MediaPanelView: View {
     }
     
     private func toggleSelectAll(_ isChecked: Bool) {
-        if isChecked {
-            selectedImages = Set(images.map { $0.id })
-        } else {
-            selectedImages.removeAll()
-        }
+        selectedImages = isChecked ? Set(images.map { $0.id }) : []
     }
     
     private func importImages() {

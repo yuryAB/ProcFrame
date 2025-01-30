@@ -1,3 +1,12 @@
+//
+//  Extensions.swift
+//  ProcFrame
+//
+//  Created by yury antony on 25/01/25.
+//
+
+import SwiftUI
+
 extension NSImage {
     func resized(to targetSize: CGSize) -> NSImage? {
         let originalSize = self.size
