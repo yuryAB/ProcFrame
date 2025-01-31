@@ -10,7 +10,7 @@ import SwiftUI
 import SpriteKit
 
 struct ContentView: View {
-    @State private var spriteScene = CustomSpriteScene(size: CGSize(width: 650, height: 550))
+    @State private var spriteScene = CanvaSpriteScene(size: CGSize(width: 650, height: 550))
 
     var body: some View {
         ZStack {
@@ -51,7 +51,7 @@ struct ContentView: View {
 }
 
 struct SpriteCanvasView: View {
-    let spriteScene: CustomSpriteScene
+    let spriteScene: CanvaSpriteScene
 
     var body: some View {
         ZStack {
