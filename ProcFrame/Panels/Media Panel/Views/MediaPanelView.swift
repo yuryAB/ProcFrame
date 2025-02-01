@@ -5,7 +5,6 @@
 //  Created by yury antony on 30/01/25.
 //
 
-
 import SwiftUI
 
 struct MediaPanelView: View {
@@ -49,14 +48,8 @@ struct MediaPanelView: View {
             )
             .disabled(images.isEmpty)
             
-            AddToSceneButtonView(isChecked: .constant(!selectedImages.isEmpty)) {
-                let selected = images.filter { selectedImages.contains($0.id) }
-                onAddToScene?(selected)
-            }
-            .disabled(selectedImages.isEmpty)
-            
             MoveToTrashButtonView(isChecked: .constant(!selectedImages.isEmpty))
-            .disabled(selectedImages.isEmpty)
+                .disabled(selectedImages.isEmpty)
         }
         .frame(maxWidth: .infinity)
         .background(Color(nsColor: .controlBackgroundColor))
@@ -78,6 +71,7 @@ struct MediaPanelView: View {
     private func importImages() {
         ImageImportManager.importImages { newImages in
             images.append(contentsOf: newImages)
+            onAddToScene?(newImages)
         }
     }
 }

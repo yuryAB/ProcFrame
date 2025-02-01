@@ -31,7 +31,9 @@ struct ContentView: View {
                     .frame(width: 160)
 
                     Spacer()
+                    
                     SpriteCanvasView(spriteScene: spriteScene)
+                    
                     Spacer()
 
                     PanelView(color: Color(nsColor: .controlColor))
@@ -50,21 +52,6 @@ struct ContentView: View {
     }
 }
 
-struct SpriteCanvasView: View {
-    let spriteScene: CanvaSpriteScene
-
-    var body: some View {
-        ZStack {
-            ScrollableView { scrollDelta in
-                spriteScene.simulateScroll(deltaY: scrollDelta)
-            }
-            SpriteView(scene: spriteScene)
-        }
-        .frame(width: 700, height: 600)
-        //.background(Color(nsColor: .controlColor))
-    }
-}
-
 struct PanelView: View {
     let color: Color
 
@@ -75,3 +62,4 @@ struct PanelView: View {
             .shadow(radius: 4)
     }
 }
+
