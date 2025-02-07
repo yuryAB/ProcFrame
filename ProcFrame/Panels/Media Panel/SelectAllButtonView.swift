@@ -5,7 +5,6 @@
 //  Created by yury antony on 30/01/25.
 //
 
-
 import SwiftUI
 
 struct SelectAllButtonView: View {

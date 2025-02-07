@@ -10,7 +10,7 @@ import SwiftUI
 import SpriteKit
 
 struct ContentView: View {
-    @State private var spriteScene = CanvaSpriteScene(size: CGSize(width: 650, height: 550))
+    @StateObject private var viewModel = ProcFrameViewModel()
 
     var body: some View {
         ZStack {
@@ -22,21 +22,16 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
 
                 HStack(spacing: 0) {
-                    MediaPanelView(
-                        color: Color(nsColor: .controlColor),
-                        onAddToScene: { selectedImages in
-                            spriteScene.addImagesAsNodes(images: selectedImages)
-                        }
-                    )
-                    .frame(width: 160)
+                    MediaPanelView(color: Color(nsColor: .controlColor))
+                        .frame(width: 160)
 
                     Spacer()
-                    
-                    SpriteCanvasView(spriteScene: spriteScene)
-                    
+
+                    SpriteCanvasView()
+
                     Spacer()
 
-                    PanelView(color: Color(nsColor: .controlColor))
+                    ProcEditionPanel()
                         .frame(width: 300)
                 }
                 .frame(maxWidth: .infinity)
@@ -49,6 +44,7 @@ struct ContentView: View {
             .frame(maxHeight: .infinity)
             .padding()
         }
+        .environmentObject(viewModel)
     }
 }
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SpriteKit
 
 extension NSImage {
     func resized(to targetSize: CGSize) -> NSImage? {
@@ -24,5 +25,18 @@ extension NSImage {
                   fraction: 1.0)
         newImage.unlockFocus()
         return newImage
+    }
+}
+
+extension String {
+    var deletingPathExtension: String {
+        (self as NSString).deletingPathExtension
+    }
+}
+
+extension SKSpriteNode {
+    var nodeID: UUID? {
+        guard let idString = userData?["id"] as? String else { return nil }
+        return UUID(uuidString: idString)
     }
 }

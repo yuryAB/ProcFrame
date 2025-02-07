@@ -5,7 +5,6 @@
 //  Created by yury antony on 30/01/25.
 //
 
-
 import AppKit
 
 class ImageImportManager {
@@ -19,18 +18,10 @@ class ImageImportManager {
                 guard let fullImage = NSImage(contentsOf: url) else { return nil }
                 return ImportedImage(
                     name: url.lastPathComponent,
-                    fullImage: fullImage,
-                    thumbnail: fullImage.resized(to: CGSize(width: 25, height: 25))
+                    fullImage: fullImage
                 )
             }
             completion(images)
         }
     }
-}
-
-struct ImportedImage: Identifiable {
-    let id = UUID()
-    let name: String
-    let fullImage: NSImage?
-    let thumbnail: NSImage?
 }
