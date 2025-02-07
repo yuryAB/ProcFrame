@@ -38,22 +38,7 @@ extension CanvaSpriteScene {
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
         lastMousePosition = location
-        var tappedNode = atPoint(location)
-        if tappedNode.name == "highlight", let parent = tappedNode.parent as? SKSpriteNode {
-            tappedNode = parent
-        }
-        if let spriteNode = tappedNode as? SKSpriteNode, spriteNode.name?.contains("-EDT-") == true {
-            if selectedNode != spriteNode {
-                deselectCurrentNode()
-                selectedNode = spriteNode
-                addHighlight(to: spriteNode)
-                if let idString = spriteNode.userData?["id"] as? String, let id = UUID(uuidString: idString) {
-                    viewModel?.selectedNodeID = id
-                }
-            }
-        } else {
-            deselectCurrentNode()
-        }
+        handleNodeSelection(at: location)
     }
     
     override func mouseUp(with event: NSEvent) {
@@ -108,14 +93,6 @@ extension CanvaSpriteScene {
 }
 
 extension CanvaSpriteScene {
-    private func deselectCurrentNode() {
-        if let current = selectedNode {
-            removeHighlight(from: current)
-        }
-        selectedNode = nil
-        viewModel?.selectedNodeID = nil
-    }
-    
     private func moveSelectedNode(zDelta: Int) {
         guard let selectedNode = selectedNode,
               let viewModel = viewModel,
@@ -195,7 +172,52 @@ extension CanvaSpriteScene {
     }
 }
 
+// MARK: - HighlightFeature
+
 extension CanvaSpriteScene {
+    private func handleNodeSelection(at location: CGPoint) {
+        var tappedNode = atPoint(location)
+
+        if tappedNode.name == "highlight", let parent = tappedNode.parent as? SKSpriteNode {
+            tappedNode = parent
+        }
+
+        if let spriteNode = tappedNode as? SKSpriteNode, spriteNode.name?.contains("-EDT-") == true {
+            if selectedNode != spriteNode {
+                deselectCurrentNode()
+                selectedNode = spriteNode
+                addHighlight(to: spriteNode)
+                viewModel?.selectedNodeID = spriteNode.nodeID
+            }
+        } else {
+            deselectCurrentNode()
+        }
+    }
+
+    func updateHighlight(for selectedID: UUID?) {
+        if let currentNode = selectedNode {
+            removeHighlight(from: currentNode)
+        }
+
+        guard let selectedID = selectedID else {
+            selectedNode = nil
+            return
+        }
+
+        if let spriteNode = children.first(where: { $0.nodeID == selectedID }) as? SKSpriteNode {
+            addHighlight(to: spriteNode)
+            selectedNode = spriteNode
+        }
+    }
+
+    private func deselectCurrentNode() {
+        if let current = selectedNode {
+            removeHighlight(from: current)
+        }
+        selectedNode = nil
+        viewModel?.selectedNodeID = nil
+    }
+
     private func addHighlight(to node: SKSpriteNode) {
         if node.childNode(withName: "highlight") == nil {
             let highlight = SKShapeNode(rectOf: CGSize(width: node.size.width + 10, height: node.size.height + 10), cornerRadius: 5)
@@ -207,26 +229,8 @@ extension CanvaSpriteScene {
             node.addChild(highlight)
         }
     }
-    
+
     private func removeHighlight(from node: SKSpriteNode) {
         node.childNode(withName: "highlight")?.removeFromParent()
-    }
-}
-
-extension CanvaSpriteScene {
-    func updateHighlight(for selectedID: UUID?) {
-        if let currentNode = selectedNode {
-            removeHighlight(from: currentNode)
-        }
-        
-        guard let selectedID = selectedID else {
-            selectedNode = nil
-            return
-        }
-        
-        if let spriteNode = children.first(where: { ($0.userData?["id"] as? String) == selectedID.uuidString }) as? SKSpriteNode {
-            addHighlight(to: spriteNode)
-            selectedNode = spriteNode
-        }
     }
 }
