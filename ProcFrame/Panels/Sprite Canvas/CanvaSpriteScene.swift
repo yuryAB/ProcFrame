@@ -14,6 +14,7 @@ class CanvaSpriteScene: SKScene {
     private var lastMousePosition: CGPoint?
     private var selectedNode: SKSpriteNode?
     private var viewModel: ProcFrameViewModel?
+    private var anchorPointIndicator: SKShapeNode?
     
     func setViewModel(_ viewModel: ProcFrameViewModel) {
         self.viewModel = viewModel
@@ -157,8 +158,10 @@ extension CanvaSpriteScene {
             spriteNode.name = procNode.nodeName
             spriteNode.userData = ["id": procNode.id.uuidString]
             addChild(spriteNode)
+            
             if let selectedID = viewModel?.selectedNodeID, selectedID == procNode.id {
                 addHighlight(to: spriteNode)
+                updateAnchorPointIndicator(for: spriteNode)
                 selectedNode = spriteNode
             }
         }
@@ -187,10 +190,12 @@ extension CanvaSpriteScene {
                 deselectCurrentNode()
                 selectedNode = spriteNode
                 addHighlight(to: spriteNode)
+                updateAnchorPointIndicator(for: spriteNode)
                 viewModel?.selectedNodeID = spriteNode.nodeID
             }
         } else {
             deselectCurrentNode()
+            removeAnchorPointIndicator()
         }
     }
 
@@ -232,5 +237,32 @@ extension CanvaSpriteScene {
 
     private func removeHighlight(from node: SKSpriteNode) {
         node.childNode(withName: "highlight")?.removeFromParent()
+    }
+}
+
+// MARK: - AnchorPointFeature
+
+extension CanvaSpriteScene {
+    private func updateAnchorPointIndicator(for node: SKSpriteNode) {
+        anchorPointIndicator?.removeFromParent()
+        let localAnchorPosition = CGPoint(
+            x: (node.anchorPoint.x - 0.5) * node.size.width,
+            y: (node.anchorPoint.y - 0.5) * node.size.height
+        )
+
+        let anchorCircle = SKShapeNode(circleOfRadius: 10)
+        anchorCircle.fillColor = .brown
+        anchorCircle.strokeColor = .blue
+        anchorCircle.position = localAnchorPosition
+        anchorCircle.zPosition = 20
+        anchorCircle.name = "anchorIndicator"
+
+        node.addChild(anchorCircle)
+        anchorPointIndicator = anchorCircle
+    }
+
+    private func removeAnchorPointIndicator() {
+        anchorPointIndicator?.removeFromParent()
+        anchorPointIndicator = nil
     }
 }
