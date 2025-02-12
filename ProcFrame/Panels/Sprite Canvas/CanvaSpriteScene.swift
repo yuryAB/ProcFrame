@@ -19,27 +19,6 @@ class CanvaSpriteScene: SKScene {
     private var rotationIndicator: SKShapeNode?
     private var isDraggingAnchorIndicator = false
 
-    private lazy var borderShader: SKShader = {
-        let source = """
-        void main() {
-            vec2 uv = v_tex_coord;
-            float bw = u_borderWidth;
-            vec4 texColor = texture2D(u_texture, uv);
-            // Se estivermos na região da borda, usa a cor magenta
-            if (uv.x < bw || uv.x > 1.0 - bw || uv.y < bw || uv.y > 1.0 - bw) {
-                gl_FragColor = vec4(u_borderColor.rgb, 1.0);
-            } else {
-                gl_FragColor = texColor;
-            }
-        }
-        """
-        let shader = SKShader(source: source, uniforms: [
-            SKUniform(name: "u_borderWidth", float: 0.05),
-            SKUniform(name: "u_borderColor", vectorFloat4: vector_float4(1.0, 0.0, 1.0, 1.0))
-        ])
-        return shader
-    }()
-
     func setViewModel(_ viewModel: ProcFrameViewModel) {
         self.viewModel = viewModel
         updateNodes(with: viewModel.nodes)
@@ -133,7 +112,7 @@ class CanvaSpriteScene: SKScene {
             )
             
             node.anchorPoint = newAnchor
-            LogManager.shared.addLog("new node anchor point: \(node.anchorPoint)")
+            
             
             viewModel?.nodes[index].anchorPoint = node.anchorPoint
             viewModel?.nodes[index].position.x = node.position.x
@@ -216,7 +195,7 @@ extension CanvaSpriteScene {
             if selectedNode != spriteNode {
                 deselectCurrentNode()
                 selectedNode = spriteNode
-                spriteNode.shader = borderShader
+                spriteNode.addOutline()
                 updateAnchorPointIndicator(for: spriteNode)
                 LogManager.shared.addLog("selected spriteNode anchor point: \(spriteNode.anchorPoint)")
                 viewModel?.selectedNodeID = spriteNode.nodeID
@@ -229,14 +208,14 @@ extension CanvaSpriteScene {
 
     func updateHighlight(for selectedID: UUID?) {
         if let currentNode = selectedNode {
-            currentNode.shader = borderShader
+            currentNode.addOutline()
         }
         guard let selectedID = selectedID else {
             selectedNode = nil
             return
         }
         if let spriteNode = children.first(where: { $0.nodeID == selectedID }) as? SKSpriteNode {
-            spriteNode.shader = borderShader
+            spriteNode.addOutline()
             updateAnchorPointIndicator(for: spriteNode)
             selectedNode = spriteNode
         }
@@ -283,9 +262,7 @@ extension CanvaSpriteScene {
     }
 
     private func deselectCurrentNode() {
-        if let current = selectedNode {
-            current.shader = nil
-        }
+        selectedNode?.removeOutline()
         selectedNode = nil
         viewModel?.selectedNodeID = nil
         removeAnchorPointIndicator()
@@ -313,7 +290,7 @@ extension CanvaSpriteScene {
             spriteNode.userData = ["id": procNode.id.uuidString]
             addChild(spriteNode)
             if let selectedID = viewModel?.selectedNodeID, selectedID == procNode.id {
-                spriteNode.shader = borderShader
+                spriteNode.addOutline()
                 updateAnchorPointIndicator(for: spriteNode)
                 selectedNode = spriteNode
             }

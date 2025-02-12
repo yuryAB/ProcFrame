@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 import SpriteKit
 
 extension NSImage {
@@ -38,5 +39,29 @@ extension SKNode {
     var nodeID: UUID? {
         guard let idString = userData?["id"] as? String else { return nil }
         return UUID(uuidString: idString)
+    }
+}
+
+extension SKSpriteNode {
+    func addOutline(color: SKColor = .magenta, width: CGFloat = 10) {
+        self.childNode(withName: "outline")?.removeFromParent()
+
+        let outline = SKShapeNode(rectOf: CGSize(width: self.size.width + width * 1.5,
+                                                 height: self.size.height + width * 1.5),
+                                  cornerRadius: 2)
+        outline.strokeColor = color
+        outline.lineWidth = width
+        outline.zPosition = self.zPosition - 1
+        outline.name = "outline"
+
+        let offsetX = (0.5 - self.anchorPoint.x) * self.size.width
+        let offsetY = (0.5 - self.anchorPoint.y) * self.size.height
+        outline.position = CGPoint(x: offsetX, y: offsetY)
+
+        self.addChild(outline)
+    }
+
+    func removeOutline() {
+        self.childNode(withName: "outline")?.removeFromParent()
     }
 }
