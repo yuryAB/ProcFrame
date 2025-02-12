@@ -24,7 +24,7 @@ struct MediaPanelView: View {
     
     private func nodeList() -> some View {
         List {
-            ForEach(viewModel.nodes.sorted { $0.position.z > $1.position.z }, id: \.id) { procNode in
+            ForEach(viewModel.nodes.sorted { $0.zPosition > $1.zPosition }, id: \.id) { procNode in
                 SelectableRowView(image: procNode.image)
             }
         }
@@ -55,9 +55,9 @@ struct MediaPanelView: View {
     
     private func importImages() {
         ImageImportManager.importImages { newImages in
-            let maxZPosition = viewModel.nodes.map { $0.position.z }.max() ?? 0
+            let maxZPosition = viewModel.nodes.map { $0.zPosition }.max() ?? 0
             let newNodes = newImages.enumerated().map { index, image in
-                ProcNode(image: image, position: ProcPosition(z: CGFloat(Int(maxZPosition) + index + 1)))
+                ProcNode(image: image, zPosition: CGFloat(Int(maxZPosition) + index + 1))
             }
             viewModel.nodes.append(contentsOf: newNodes)
         }

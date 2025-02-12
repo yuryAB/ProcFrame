@@ -88,10 +88,10 @@ struct ProcEditionPanel: View {
     
     private func bindingForZ(nodeBinding: Binding<ProcNode>) -> Binding<CGFloat> {
         return Binding<CGFloat>(
-            get: { nodeBinding.wrappedValue.position.z },
+            get: { nodeBinding.wrappedValue.zPosition },
             set: { newValue in
                 var node = nodeBinding.wrappedValue
-                node.position.z = newValue
+                node.zPosition = newValue
                 nodeBinding.wrappedValue = node
             }
         )

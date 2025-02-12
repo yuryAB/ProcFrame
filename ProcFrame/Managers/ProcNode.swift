@@ -8,12 +8,6 @@
 import Foundation
 import SwiftUI
 
-struct ProcPosition: Equatable, Hashable {
-    var x: CGFloat = 0
-    var y: CGFloat = 0
-    var z: CGFloat = 0
-}
-
 struct ProcScale: Equatable, Hashable {
     var x: CGFloat = 1.0
     var y: CGFloat = 1.0
@@ -23,7 +17,8 @@ struct ProcNode: Identifiable, Equatable {
     let id = UUID()
     let nodeName: String
 
-    var position: ProcPosition
+    var position: CGPoint
+    var zPosition: CGFloat
     var rotation: CGFloat
     var anchorPoint: CGPoint
     var scale: ProcScale
@@ -33,7 +28,8 @@ struct ProcNode: Identifiable, Equatable {
     var parentID: UUID?
 
     init(image: ImportedImage,
-         position: ProcPosition = ProcPosition(),
+         position: CGPoint = .zero,
+         zPosition: CGFloat = 0,
          rotation: CGFloat = 0,
          anchorPoint: CGPoint = CGPoint(x: 0.5, y: 0.5),
          scale: ProcScale = ProcScale(),
@@ -43,6 +39,7 @@ struct ProcNode: Identifiable, Equatable {
         self.nodeName = image.name + "-EDT-"
         self.image = image
         self.position = position
+        self.zPosition = zPosition
         self.rotation = rotation
         self.anchorPoint = anchorPoint
         self.scale = scale

@@ -37,7 +37,7 @@ class SceneAssetStore {
 
     func updateNode(
         nodeID: UUID,
-        position: ProcPosition? = nil,
+        position: CGPoint? = nil,
         rotation: CGFloat? = nil,
         anchorPoint: CGPoint? = nil,
         scale: ProcScale? = nil,
