@@ -39,7 +39,7 @@ class SceneAssetStore {
         nodeID: UUID,
         position: ProcPosition? = nil,
         rotation: CGFloat? = nil,
-        anchorPoint: ProcAnchorPoint? = nil,
+        anchorPoint: CGPoint? = nil,
         scale: ProcScale? = nil,
         opacity: CGFloat? = nil,
         parentID: UUID? = nil

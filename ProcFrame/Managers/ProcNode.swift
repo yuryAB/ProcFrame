@@ -14,11 +14,6 @@ struct ProcPosition: Equatable, Hashable {
     var z: CGFloat = 0
 }
 
-struct ProcAnchorPoint: Equatable {
-    var x: CGFloat = 0.5
-    var y: CGFloat = 0.5
-}
-
 struct ProcScale: Equatable, Hashable {
     var x: CGFloat = 1.0
     var y: CGFloat = 1.0
@@ -30,7 +25,7 @@ struct ProcNode: Identifiable, Equatable {
 
     var position: ProcPosition
     var rotation: CGFloat
-    var anchorPoint: ProcAnchorPoint
+    var anchorPoint: CGPoint
     var scale: ProcScale
     var opacity: CGFloat
     var image: ImportedImage
@@ -40,7 +35,7 @@ struct ProcNode: Identifiable, Equatable {
     init(image: ImportedImage,
          position: ProcPosition = ProcPosition(),
          rotation: CGFloat = 0,
-         anchorPoint: ProcAnchorPoint = ProcAnchorPoint(),
+         anchorPoint: CGPoint = CGPoint(x: 0.5, y: 0.5),
          scale: ProcScale = ProcScale(),
          opacity: CGFloat = 1.0,
          parentID: UUID? = nil) {
