@@ -14,94 +14,80 @@ struct ProcEditionPanel: View {
         Group {
             if let nodeBinding = selectedProcNode() {
                 VStack(alignment: .leading, spacing: 20) {
-                    // MARK: - Position Section
-                    Text("Position")
-                        .font(.headline)
                     
-                    HStack(alignment: .center, spacing: 16) {
-                        Image(systemName: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left")
-                            .frame(width: 24)
-                        
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("X:")
-                                    .frame(width: 30, alignment: .leading)
-                                TextField("", value: bindingForX(nodeBinding: nodeBinding), formatter: numberFormatter)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    HStack {
+                        HStack(alignment: .center, spacing: 16) {
+                            Image(systemName: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left")
+                                .frame(width: 24)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("X:")
+                                        .frame(width: 30, alignment: .leading)
+                                    TextField("", value: bindingForX(nodeBinding: nodeBinding), formatter: numberFormatter)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                }
+                                HStack {
+                                    Text("Y:")
+                                        .frame(width: 30, alignment: .leading)
+                                    TextField("", value: bindingForY(nodeBinding: nodeBinding), formatter: numberFormatter)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                }
                             }
-                            HStack {
-                                Text("Y:")
-                                    .frame(width: 30, alignment: .leading)
-                                TextField("", value: bindingForY(nodeBinding: nodeBinding), formatter: numberFormatter)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                        }
+                        
+                        HStack(alignment: .center) {
+                            Image(systemName: "dot.scope")
+                                .frame(width: 24)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("X:")
+                                        .frame(alignment: .leading)
+                                    TextField("", value: bindingForAnchorX(nodeBinding: nodeBinding), formatter: numberFormatter)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                }
+                                HStack {
+                                    Text("Y:")
+                                        .frame(alignment: .leading)
+                                    TextField("", value: bindingForAnchorY(nodeBinding: nodeBinding), formatter: numberFormatter)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                }
                             }
                         }
                     }
                     
-                    // Linha para Z
-                    HStack(alignment: .center, spacing: 16) {
-                        Image(systemName: "square.stack")
-                            .frame(width: 24)
-                        HStack {
-                            Text("Z:")
-                                .frame(width: 30, alignment: .leading)
-                            TextField("", value: bindingForZ(nodeBinding: nodeBinding), formatter: numberFormatter)
+                    
+                    HStack {
+                        
+                        HStack(alignment: .center, spacing: 16) {
+                            Image(systemName: "square.stack")
+                                .frame(width: 24)
+                            HStack {
+                                Text("Z:")
+                                    .frame(width: 30, alignment: .leading)
+                                TextField("", value: bindingForZ(nodeBinding: nodeBinding), formatter: numberFormatter)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            }
+                        }
+                        
+                        HStack(alignment: .center, spacing: 16) {
+                            Button(action: {
+                                viewModel.isRotating.toggle()
+                            }) {
+                                Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
+                                    .frame(width: 24)
+                                    .foregroundColor(viewModel.isRotating ? .blue : .primary)
+                            }
+                            
+                            TextField("", value: bindingForRotation(nodeBinding: nodeBinding), formatter: numberFormatter)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 80)
                         }
                     }
-                    
-                    // MARK: - Anchor Point Section
-                    Text("Anchor Point")
-                        .font(.headline)
-                    
-                    HStack(alignment: .center, spacing: 16) {
-                        Image(systemName: "dot.scope")
-                            .frame(width: 24)
-                        
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("X:")
-                                    .frame(width: 60, alignment: .leading)
-                                TextField("", value: bindingForAnchorX(nodeBinding: nodeBinding), formatter: numberFormatter)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                            }
-                            HStack {
-                                Text("Y:")
-                                    .frame(width: 60, alignment: .leading)
-                                TextField("", value: bindingForAnchorY(nodeBinding: nodeBinding), formatter: numberFormatter)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                            }
-                        }
-                    }
-                    
-                    // MARK: - Rotation Section
-                    Text("Rotation")
-                        .font(.headline)
-                    
-                    HStack(alignment: .center, spacing: 16) {
-                        Button(action: {
-                            let currentRotation = bindingForRotation(nodeBinding: nodeBinding).wrappedValue
-                            bindingForRotation(nodeBinding: nodeBinding).wrappedValue = currentRotation - 5.0
-                        }) {
-                            Image(systemName: "arrow.trianglehead.2.counterclockwise.rotate.90")
-                                .frame(width: 24)
-                        }
-                        
-                        TextField("", value: bindingForRotation(nodeBinding: nodeBinding), formatter: numberFormatter)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 80)
-                        
-                        Button(action: {
-                            let currentRotation = bindingForRotation(nodeBinding: nodeBinding).wrappedValue
-                            bindingForRotation(nodeBinding: nodeBinding).wrappedValue = currentRotation + 5.0
-                        }) {
-                            Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
-                                .frame(width: 24)
-                        }
-                    }
-                    
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
                 .background(Color(nsColor: .controlColor))
                 .cornerRadius(8)
@@ -117,7 +103,7 @@ struct ProcEditionPanel: View {
                 .background(Color(nsColor: .controlColor))
                 .cornerRadius(8)
             }
-                
+            
         }
         
     }

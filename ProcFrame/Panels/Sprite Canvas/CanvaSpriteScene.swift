@@ -13,22 +13,27 @@ class CanvaSpriteScene: SKScene {
     private var cameraNode = SKCameraNode()
     private var lastMousePosition: CGPoint?
     private var selectedNode: SKSpriteNode?
-    private var viewModel: ProcFrameViewModel?
     private var anchorPointIndicator: SKShapeNode?
-    private var isRotating = false
     private var rotationIndicator: SKShapeNode?
     private var isDraggingAnchorIndicator = false
-
-    func setViewModel(_ viewModel: ProcFrameViewModel) {
+    
+    private(set) var viewModel: ProcFrameViewModel
+    
+    init(size: CGSize, viewModel: ProcFrameViewModel) {
         self.viewModel = viewModel
-        updateNodes(with: viewModel.nodes)
+        super.init(size: size)
     }
-
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
     override func didMove(to view: SKView) {
         backgroundColor = .white
         setupCamera()
     }
-
+    
     func setupCamera() {
         if cameraNode.parent == nil {
             addChild(cameraNode)
@@ -36,32 +41,32 @@ class CanvaSpriteScene: SKScene {
             cameraNode.setScale(1.0)
         }
     }
-
+    
     func moveCamera(by delta: CGPoint) {
-        if isRotating { return }
+        if viewModel.isRotating { return }
         let deltaX = delta.x * 1.5
         let deltaY = delta.y * 1.5
         cameraNode.position = CGPoint(x: cameraNode.position.x - deltaX,
                                       y: cameraNode.position.y + deltaY)
     }
-
+    
     func zoomCamera(by zoomDelta: CGFloat) {
-        if isRotating { return }
+        if viewModel.isRotating { return }
         let newScale = max(min(cameraNode.xScale - (zoomDelta * 1.5), 5.0), 0.5)
         cameraNode.setScale(newScale)
     }
-
+    
     func rotateSelectedNode(by deltaRotation: CGFloat) {
-        guard isRotating, let node = selectedNode else { return }
+        guard viewModel.isRotating, let node = selectedNode else { return }
         node.zRotation += deltaRotation / 50
     }
-
+    
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
         lastMousePosition = location
         handleNodeSelection(at: location)
     }
-
+    
     override func mouseDragged(with event: NSEvent) {
         if isDraggingAnchorIndicator {
             handleAnchorIndicatorDrag(with: event)
@@ -76,7 +81,7 @@ class CanvaSpriteScene: SKScene {
         }
         lastMousePosition = currentPosition
     }
-
+    
     override func mouseUp(with event: NSEvent) {
         if isDraggingAnchorIndicator, let node = selectedNode, let indicator = anchorPointIndicator, let nodeID = node.nodeID {
             updateAnchorPoint(for: node, with: indicator, nodeID: nodeID)
@@ -84,36 +89,36 @@ class CanvaSpriteScene: SKScene {
             removeAnchorPointIndicator()
             return
         }
-
+        
         guard let selectedNode = selectedNode, let nodeID = selectedNode.nodeID,
-              let index = viewModel?.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
-
-        viewModel?.nodes[index].position = selectedNode.position
-        viewModel?.nodes[index].anchorPoint = selectedNode.anchorPoint
+              let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        
+        viewModel.nodes[index].position = selectedNode.position
+        viewModel.nodes[index].anchorPoint = selectedNode.anchorPoint
     }
-
+    
     private func updateAnchorPoint(for node: SKSpriteNode, with indicator: SKShapeNode, nodeID: UUID) {
-        guard let index = viewModel?.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
-
+        guard let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        
         let oldAnchor = node.anchorPoint
         let dragOffset = indicator.position
-
+        
         let newAnchor = CGPoint(
             x: min(max(oldAnchor.x + dragOffset.x / node.size.width, 0), 1),
             y: min(max(oldAnchor.y + dragOffset.y / node.size.height, 0), 1)
         )
-
+        
         let compensation = CGPoint(
             x: (oldAnchor.x - newAnchor.x) * node.size.width * node.xScale,
             y: (oldAnchor.y - newAnchor.y) * node.size.height * node.yScale
         )
-
+        
         node.position.x += compensation.x
         node.position.y += compensation.y
         node.anchorPoint = newAnchor
-
-        viewModel?.nodes[index].anchorPoint = newAnchor
-        viewModel?.nodes[index].position = node.position
+        
+        viewModel.nodes[index].anchorPoint = newAnchor
+        viewModel.nodes[index].position = node.position
     }
 }
 
@@ -121,7 +126,7 @@ extension CanvaSpriteScene {
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 15:
-            isRotating = true
+            viewModel.isRotating = true
         case 7:
             removeSelectedNode()
         case 33:
@@ -132,26 +137,25 @@ extension CanvaSpriteScene {
             super.keyDown(with: event)
         }
     }
-
+    
     override func keyUp(with event: NSEvent) {
         switch event.keyCode {
         case 15:
-            isRotating = false
+            viewModel.isRotating = false
             rotationIndicator?.removeFromParent()
             rotationIndicator = nil
             if let node = selectedNode,
                let nodeID = node.nodeID,
-               let index = viewModel?.nodes.firstIndex(where: { $0.id == nodeID }) {
-                viewModel?.nodes[index].rotation = node.zRotation
+               let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) {
+                viewModel.nodes[index].rotation = node.zRotation
             }
         default:
             super.keyUp(with: event)
         }
     }
-
+    
     private func moveSelectedNode(zDelta: Int) {
         guard let selectedNode = selectedNode,
-              let viewModel = viewModel,
               let nodeID = selectedNode.nodeID else { return }
         var sortedNodes = viewModel.nodes.sorted { $0.zPosition < $1.zPosition }
         guard let currentIndex = sortedNodes.firstIndex(where: { $0.id == nodeID }) else { return }
@@ -169,30 +173,30 @@ extension CanvaSpriteScene {
 extension CanvaSpriteScene {
     private func handleNodeSelection(at location: CGPoint) {
         let tappedNode = atPoint(location)
-
+        
         switch tappedNode.name {
         case "anchorIndicator":
             isDraggingAnchorIndicator = true
-
+            
         case "outline":
             return
-
+            
         case let name? where name.contains("-EDT-"):
             guard let spriteNode = tappedNode as? SKSpriteNode else { return }
             guard selectedNode != spriteNode else { return }
-
+            
             deselectCurrentNode()
             selectedNode = spriteNode
             spriteNode.addOutline()
             updateAnchorPointIndicator(for: spriteNode)
-            viewModel?.selectedNodeID = spriteNode.nodeID
-
+            viewModel.selectedNodeID = spriteNode.nodeID
+            
         default:
             deselectCurrentNode()
             removeAnchorPointIndicator()
         }
     }
-
+    
     func updateHighlight(for selectedID: UUID?) {
         if let currentNode = selectedNode {
             currentNode.addOutline()
@@ -208,14 +212,14 @@ extension CanvaSpriteScene {
             selectedNode = spriteNode
         }
     }
-
+    
     private func handleAnchorIndicatorDrag(with event: NSEvent) {
         if let node = selectedNode, let anchorIndicator = anchorPointIndicator {
             let locationInNode = node.convert(event.location(in: self), from: self)
             anchorIndicator.position = locationInNode
         }
     }
-
+    
     private func updateAnchorPointIndicator(for node: SKSpriteNode) {
         anchorPointIndicator?.removeFromParent()
         
@@ -229,33 +233,33 @@ extension CanvaSpriteScene {
         node.addChild(indicator)
         anchorPointIndicator = indicator
     }
-
+    
     private func removeSelectedNode() {
         guard let selectedNode = selectedNode,
               let nodeID = selectedNode.nodeID else { return }
         removeNode(nodeID: nodeID)
     }
-
+    
     func removeNode(nodeID: UUID) {
         if let nodeToRemove = children.first(where: { ($0.userData?["id"] as? String) == nodeID.uuidString }) {
             nodeToRemove.removeFromParent()
-            viewModel?.nodes.removeAll { $0.id == nodeID }
+            viewModel.nodes.removeAll { $0.id == nodeID }
         }
     }
-
+    
     private func removeAnchorPointIndicator() {
         anchorPointIndicator?.removeFromParent()
         anchorPointIndicator = nil
     }
-
+    
     private func deselectCurrentNode() {
         selectedNode?.removeOutline()
         selectedNode = nil
-        viewModel?.selectedNodeID = nil
+        viewModel.selectedNodeID = nil
         removeAnchorPointIndicator()
         rotationIndicator?.removeFromParent()
         rotationIndicator = nil
-        isRotating = false
+        viewModel.isRotating = false
     }
 }
 
@@ -276,7 +280,7 @@ extension CanvaSpriteScene {
             spriteNode.anchorPoint = procNode.anchorPoint
             spriteNode.userData = ["id": procNode.id.uuidString]
             addChild(spriteNode)
-            if let selectedID = viewModel?.selectedNodeID, selectedID == procNode.id {
+            if let selectedID = viewModel.selectedNodeID, selectedID == procNode.id {
                 spriteNode.addOutline()
                 updateAnchorPointIndicator(for: spriteNode)
                 selectedNode = spriteNode

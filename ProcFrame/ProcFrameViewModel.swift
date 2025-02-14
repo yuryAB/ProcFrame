@@ -11,6 +11,10 @@ import SpriteKit
 
 class ProcFrameViewModel: ObservableObject {
     @Published var nodes: [ProcNode] = []
-    @Published var spriteScene = CanvaSpriteScene(size: CGSize(width: 650, height: 550))
-    @Published var selectedNodeID: UUID? = nil
+    @Published var selectedNodeID: UUID?
+    @Published var isRotating = false
+
+    lazy var spriteScene: CanvaSpriteScene = {
+        CanvaSpriteScene(size: CGSize(width: 650, height: 550), viewModel: self)
+    }()
 }

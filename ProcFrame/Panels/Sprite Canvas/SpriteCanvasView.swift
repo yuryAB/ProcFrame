@@ -94,9 +94,6 @@ struct SpriteCanvasView: View {
     var body: some View {
         CustomSpriteView()
             .frame(width: 700, height: 600)
-            .onAppear {
-                viewModel.spriteScene.setViewModel(viewModel)
-            }
             .onChange(of: viewModel.nodes) {
                 viewModel.spriteScene.updateNodes(with: viewModel.nodes)
             }
