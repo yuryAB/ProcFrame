@@ -101,23 +101,33 @@ class CanvaSpriteScene: SKScene {
 
     private func updateAnchorPoint(for node: SKSpriteNode, with indicator: SKShapeNode, nodeID: UUID) {
         guard let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        
         let oldAnchor = node.anchorPoint
         let dragOffset = indicator.position
+        
         let newAnchor = CGPoint(
             x: min(max(oldAnchor.x + dragOffset.x / node.size.width, 0), 1),
             y: min(max(oldAnchor.y + dragOffset.y / node.size.height, 0), 1)
         )
-        
-        let compensation = CGPoint(
+    
+        let localCompensation = CGPoint(
             x: -(oldAnchor.x - newAnchor.x) * node.size.width * node.xScale,
             y: -(oldAnchor.y - newAnchor.y) * node.size.height * node.yScale
         )
         
-        node.position.x += compensation.x
-        node.position.y += compensation.y
+        let rotation = node.zRotation
+        let globalCompensation = CGPoint(
+            x: localCompensation.x * cos(rotation) - localCompensation.y * sin(rotation),
+            y: localCompensation.x * sin(rotation) + localCompensation.y * cos(rotation)
+        )
+        
+        node.position.x += globalCompensation.x
+        node.position.y += globalCompensation.y
         node.anchorPoint = newAnchor
+        
         viewModel.nodes[index].anchorPoint = newAnchor
         viewModel.nodes[index].position = node.position
+        
         node.refreshOutline()
     }
 }
