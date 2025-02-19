@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SelectableRowView: View {
-    let image: ImportedImage
+    let procNode: ProcNode
     @EnvironmentObject var viewModel: ProcFrameViewModel
 
     var body: some View {
@@ -34,7 +34,7 @@ struct SelectableRowView: View {
     // MARK: - Subviews
     private var imageView: some View {
         Group {
-            if let nsImage = image.fullImage.resized(to: CGSize(width: 25, height: 25)) {
+            if let nsImage = procNode.image.fullImage.resized(to: CGSize(width: 25, height: 25)) {
                 Image(nsImage: nsImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -45,7 +45,7 @@ struct SelectableRowView: View {
     
     private var TextView: some View {
         Group {
-            Text(image.name.deletingPathExtension)
+            Text(procNode.image.name.deletingPathExtension)
                 .lineLimit(2)
                 .truncationMode(.tail)
                 .font(.system(size: 11))
@@ -55,17 +55,13 @@ struct SelectableRowView: View {
     
     // MARK: - Computed Properties
     private var isSelected: Bool {
-        viewModel.selectedNodeID == imageID
-    }
-    
-    private var imageID: UUID? {
-        viewModel.nodes.first { $0.image == image }?.id
+        viewModel.selectedNodeID == procNode.id
     }
     
     // MARK: - Actions
     private func toggleSelection() {
         withAnimation(.easeInOut(duration: 0.3)) {
-            viewModel.selectedNodeID = (viewModel.selectedNodeID == imageID) ? nil : imageID
+            viewModel.selectedNodeID = isSelected ? nil : procNode.id
         }
     }
 }

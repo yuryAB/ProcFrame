@@ -25,7 +25,7 @@ struct MediaPanelView: View {
     private func nodeList() -> some View {
         List {
             ForEach(viewModel.nodes.sorted { $0.zPosition > $1.zPosition }, id: \.id) { procNode in
-                SelectableRowView(image: procNode.image)
+                SelectableRowView(procNode: procNode)
             }
         }
         .cornerRadius(8)
@@ -59,6 +59,7 @@ struct MediaPanelView: View {
             let newNodes = newImages.enumerated().map { index, image in
                 ProcNode(image: image, zPosition: CGFloat(Int(maxZPosition) + index + 1))
             }
+            viewModel.isStructuralChange = true
             viewModel.nodes.append(contentsOf: newNodes)
         }
     }

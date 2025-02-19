@@ -95,7 +95,10 @@ struct SpriteCanvasView: View {
         CustomSpriteView()
             .frame(width: 700, height: 600)
             .onChange(of: viewModel.nodes) {
-                viewModel.spriteScene.updateNodes(with: viewModel.nodes)
+                if viewModel.isStructuralChange {
+                    viewModel.spriteScene.updateNodes(with: viewModel.nodes)
+                    viewModel.isStructuralChange = false
+                }
             }
             .onChange(of: viewModel.selectedNodeID) {
                 viewModel.spriteScene.updateHighlight(for: viewModel.selectedNodeID)
