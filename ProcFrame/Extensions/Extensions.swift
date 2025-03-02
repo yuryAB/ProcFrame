@@ -72,15 +72,15 @@ extension SKNode {
 
 
 extension SKSpriteNode {
-    func addOutline(color: SKColor = .magenta, width: CGFloat = 10) {
+    func drawOutline(color: SKColor = .magenta, width: CGFloat = 5) {
         self.childNode(withName: "outline")?.removeFromParent()
         
-        let outline = SKShapeNode(rectOf: CGSize(width: self.size.width + width * 1.5,
-                                                 height: self.size.height + width * 1.5),
-                                  cornerRadius: 2)
+        let outline = SKShapeNode(rectOf: CGSize(width: self.size.width + width * 1.1,
+                                                 height: self.size.height + width * 1.1),
+                                  cornerRadius: 3)
         outline.strokeColor = color
         outline.lineWidth = width
-        outline.zPosition = self.zPosition - 1
+        outline.zPosition = 10
         outline.name = "outline"
         
         let offsetX = (0.5 - self.anchorPoint.x) * self.size.width
@@ -92,10 +92,5 @@ extension SKSpriteNode {
     
     func removeOutline() {
         self.childNode(withName: "outline")?.removeFromParent()
-    }
-    
-    func refreshOutline() {
-        removeOutline()
-        addOutline()
     }
 }

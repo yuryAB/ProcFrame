@@ -7,9 +7,9 @@
 
 
 enum CanvasKeyAction: UInt16 {
-    case toggleRotation = 15 //  "R"
+    case rotationMode = 15 //  "R"
     case deleteNode = 7      //  "X"
     case moveZDown = 33      //  "["
     case moveZUp = 30        //  "]"
-    case merge = 46          //  "m"
+    case parentingMode  = 46    //  "m"
 }

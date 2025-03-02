@@ -24,8 +24,32 @@ struct ProcNode: Identifiable, Equatable {
     var scale: ProcScale
     var opacity: CGFloat
     var image: ImportedImage
-
     var parentID: UUID?
+    var children: [ProcNode] = []
+
+    mutating func addChild(_ child: ProcNode) {
+        var newChild = child
+        newChild.parentID = self.id
+        children.append(newChild)
+        children.sort { $0.zPosition > $1.zPosition }
+    }
+
+    mutating func removeChild(_ childID: UUID) -> ProcNode? {
+        if let index = children.firstIndex(where: { $0.id == childID }) {
+            var removedChild = children.remove(at: index)
+            removedChild.parentID = nil
+            return removedChild
+        }
+        return nil
+    }
+    
+    func isChild(of parentID: UUID) -> Bool {
+        return self.parentID == parentID
+    }
+    
+    mutating func detachFromParent() {
+        self.parentID = nil
+    }
 
     init(image: ImportedImage,
          position: CGPoint = .zero,

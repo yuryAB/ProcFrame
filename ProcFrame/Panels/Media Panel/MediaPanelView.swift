@@ -15,7 +15,7 @@ struct MediaPanelView: View {
         VStack(spacing: 3) {
             ImportButtonView(action: importImages)
             nodeList()
-            actionButtons()
+            //actionButtons()
         }
         .padding(4)
         .background(color)

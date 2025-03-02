@@ -14,7 +14,15 @@ struct ProcEditionPanel: View {
         Group {
             if let nodeBinding = selectedProcNode() {
                 VStack(alignment: .leading, spacing: 20) {
-                    
+                    if let message = viewModel.notificationMessage, let type = viewModel.notificationType {
+                        Text(message)
+                            .foregroundColor(type == .error ? .red : (type == .warning ? .yellow : .green))
+                            .padding()
+                            .background(Color.black.opacity(0.8))
+                            .cornerRadius(8)
+                            .transition(.opacity)
+                            .animation(.easeInOut)
+                    }
                     HStack {
                         HStack(alignment: .center, spacing: 16) {
                             Image(systemName: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left")
@@ -73,11 +81,11 @@ struct ProcEditionPanel: View {
                         
                         HStack(alignment: .center, spacing: 16) {
                             Button(action: {
-                                viewModel.isRotating.toggle()
+                                viewModel.rotating.toggle()
                             }) {
                                 Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
                                     .frame(width: 24)
-                                    .foregroundColor(viewModel.isRotating ? .blue : .primary)
+                                    .foregroundColor(viewModel.rotating ? .blue : .primary)
                             }
                             
                             TextField("", value: bindingForRotation(nodeBinding: nodeBinding), formatter: numberFormatter)
