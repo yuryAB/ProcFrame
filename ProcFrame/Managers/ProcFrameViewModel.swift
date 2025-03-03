@@ -12,11 +12,10 @@ import SpriteKit
 class ProcFrameViewModel: ObservableObject {
     @Published var nodes: [ProcNode] = []
     @Published var selectedNodeID: UUID?
-    @Published var rotating = false
-    @Published var parenting = false
     @Published var isStructuralChange = false
     @Published var notificationMessage: String?
     @Published var notificationType: NotificationType?
+    @Published var editionType: EditionType = .selection
     
     lazy var spriteScene: CanvaSpriteScene = {
         CanvaSpriteScene(size: CGSize(width: 650, height: 550), viewModel: self)
@@ -44,6 +43,10 @@ class ProcFrameViewModel: ObservableObject {
         notificationMessage = message
         notificationType = type
     }
+    
+    func setEditionMode(to type: EditionType) {
+        editionType = type
+    }
 }
 
 extension ProcFrameViewModel {
@@ -52,4 +55,10 @@ extension ProcFrameViewModel {
         case error
         case success
     }
+}
+
+enum EditionType {
+    case selection
+    case rotation
+    case parenting
 }

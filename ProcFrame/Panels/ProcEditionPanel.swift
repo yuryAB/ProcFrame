@@ -12,8 +12,25 @@ struct ProcEditionPanel: View {
     
     var body: some View {
         Group {
-            if let nodeBinding = selectedProcNode() {
-                VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Image(systemName: viewModel.editionType == .selection ? "cursorarrow.click" :
+                            viewModel.editionType == .rotation ? "arrow.trianglehead.2.clockwise.rotate.90" :
+                            "link")
+                    .foregroundColor(viewModel.editionType == .selection ? .green :
+                                        viewModel.editionType == .rotation ? .blue :
+                            .purple)
+                    
+                    Text(viewModel.editionType == .selection ? "Modo: Seleção" :
+                            viewModel.editionType == .rotation ? "Modo: Rotação" :
+                            "Modo: Parentalidade")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                }
+                .padding()
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(8)
+                if let nodeBinding = selectedProcNode() {
                     if let message = viewModel.notificationMessage, let type = viewModel.notificationType {
                         Text(message)
                             .foregroundColor(type == .error ? .red : (type == .warning ? .yellow : .green))
@@ -81,11 +98,11 @@ struct ProcEditionPanel: View {
                         
                         HStack(alignment: .center, spacing: 16) {
                             Button(action: {
-                                viewModel.rotating.toggle()
+                                viewModel.editionType = .rotation
                             }) {
                                 Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill")
                                     .frame(width: 24)
-                                    .foregroundColor(viewModel.rotating ? .blue : .primary)
+                                    .foregroundColor(viewModel.editionType == .rotation ? .blue : .primary)
                             }
                             
                             TextField("", value: bindingForRotation(nodeBinding: nodeBinding), formatter: numberFormatter)
@@ -95,25 +112,14 @@ struct ProcEditionPanel: View {
                     }
                     Spacer()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
-                .background(Color(nsColor: .controlColor))
-                .cornerRadius(8)
-            } else {
-                VStack {
-                    Spacer()
-                    Text("No node selected")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
-                .background(Color(nsColor: .controlColor))
-                .cornerRadius(8)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+            .background(Color(nsColor: .controlColor))
+            .cornerRadius(8)
+            
             
         }
-        
     }
     
     // MARK: - Bindings
