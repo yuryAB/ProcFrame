@@ -60,5 +60,5 @@ extension ProcFrameViewModel {
 enum EditionType {
     case selection
     case rotation
-    case parenting
+    case parent
 }

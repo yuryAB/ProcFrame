@@ -46,7 +46,7 @@ class CustomSKView: SKView {
     }
 }
 
-// MARK: - CustomSpriteView: SwiftUI Integration (without pan gesture to avoid conflict with node drag)
+// MARK: - CustomSpriteView: SwiftUI Integration
 struct CustomSpriteView: NSViewRepresentable {
     @EnvironmentObject var viewModel: ProcFrameViewModel
     
@@ -96,7 +96,7 @@ struct SpriteCanvasView: View {
             .frame(width: 700, height: 600)
             .onChange(of: viewModel.nodes) {
                 if viewModel.isStructuralChange {
-                    viewModel.spriteScene.updateNodes(with: viewModel.nodes)
+                    viewModel.spriteScene.updateNodes()
                     viewModel.isStructuralChange = false
                 }
             }
