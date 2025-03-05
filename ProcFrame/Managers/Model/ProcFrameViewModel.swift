@@ -16,6 +16,7 @@ class ProcFrameViewModel: ObservableObject {
     @Published var notificationMessage: String?
     @Published var notificationType: NotificationType?
     @Published var editionType: EditionType = .selection
+    var previousNodeCount: Int = 0
     
     lazy var spriteScene: CanvaSpriteScene = {
         CanvaSpriteScene(size: CGSize(width: 650, height: 550), viewModel: self)
