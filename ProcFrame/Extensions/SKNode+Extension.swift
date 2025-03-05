@@ -28,16 +28,4 @@ extension SKNode {
         self.position = globalPosition
         scene.addChild(self)
     }
-    
-    func findNode(withID id: UUID) -> SKSpriteNode? {
-        if let spriteNode = self as? SKSpriteNode, spriteNode.nodeID == id {
-            return spriteNode
-        }
-        for child in children {
-            if let found = child.findNode(withID: id) {
-                return found
-            }
-        }
-        return nil
-    }
 }

@@ -21,13 +21,52 @@ class ProcFrameViewModel: ObservableObject {
         CanvaSpriteScene(size: CGSize(width: 650, height: 550), viewModel: self)
     }()
     
-    func moveNodeInList(nodeID: UUID, direction: Int) {
-        guard let currentIndex = nodes.firstIndex(where: { $0.id == nodeID }) else { return }
-        let newIndex = currentIndex + direction
-        guard newIndex >= 0, newIndex < nodes.count else { return }
+    func reorderNodesByZPosition() {
+        var zPositionMap: [UUID: CGFloat] = [:]
+
+        for node in nodes {
+            zPositionMap[node.id] = calculateAdjustedZPosition(for: node, in: zPositionMap)
+        }
+
+        nodes.sort {
+            let zPositionA = zPositionMap[$0.id] ?? $0.zPosition
+            let zPositionB = zPositionMap[$1.id] ?? $1.zPosition
+            return zPositionA > zPositionB
+        }
 
         isStructuralChange = true
-        nodes.swapAt(currentIndex, newIndex)
+    }
+
+    private func calculateAdjustedZPosition(for node: ProcNode, in cache: [UUID: CGFloat]) -> CGFloat {
+        if let cachedValue = cache[node.id] {
+            return cachedValue
+        }
+
+        guard let parentID = node.parentID, let parentNode = nodes.first(where: { $0.id == parentID }) else {
+            return node.zPosition
+        }
+
+        let newPosition = (cache[parentID] ?? parentNode.zPosition) + node.zPosition
+        return newPosition
+    }
+    
+    func updateProcNode(from spriteNode: SKSpriteNode) {
+        guard let nodeID = spriteNode.nodeID,
+              let index = nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+
+        nodes[index].position = spriteNode.position
+        nodes[index].zPosition = spriteNode.zPosition
+        nodes[index].rotation = spriteNode.zRotation
+        nodes[index].scale = ProcScale(x: spriteNode.xScale, y: spriteNode.yScale)
+        nodes[index].opacity = spriteNode.alpha
+        nodes[index].anchorPoint = spriteNode.anchorPoint
+
+        if let parentSpriteNode = spriteNode.parent as? SKSpriteNode,
+           let parentID = parentSpriteNode.nodeID {
+            nodes[index].parentID = parentID
+        } else {
+            nodes[index].parentID = nil
+        }
     }
     
     func findParentNodes() -> [ProcNode] {
@@ -43,10 +82,6 @@ class ProcFrameViewModel: ObservableObject {
         notificationMessage = message
         notificationType = type
     }
-    
-    func setEditionMode(to type: EditionType) {
-        editionType = type
-    }
 }
 
 extension ProcFrameViewModel {
@@ -61,4 +96,5 @@ enum EditionType {
     case selection
     case rotation
     case parent
+    case depth
 }

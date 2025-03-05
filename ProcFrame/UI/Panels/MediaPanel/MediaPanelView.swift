@@ -24,11 +24,12 @@ struct MediaPanelView: View {
     
     private func nodeList() -> some View {
         List {
-            ForEach(viewModel.nodes.sorted { $0.zPosition > $1.zPosition }, id: \.id) { procNode in
+            ForEach(viewModel.nodes, id: \.id) { procNode in
                 SelectableRowView(procNode: procNode)
             }
         }
         .cornerRadius(8)
+        .animation(.default, value: viewModel.isStructuralChange)
     }
     
     private func actionButtons() -> some View {

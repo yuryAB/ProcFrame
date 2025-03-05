@@ -14,3 +14,9 @@ enum CanvasKeyAction: UInt16 {
     case moveFront = 30      // "]"
     case enterParentState = 35  // "p"
 }
+
+
+enum DepthOrientation {
+    case forward
+    case backward
+}

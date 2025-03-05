@@ -16,8 +16,8 @@ class CanvaSpriteScene: SKScene {
     private var anchorPointIndicator: SKShapeNode?
     private var rotationIndicator: SKShapeNode?
     private var isDraggingAnchorIndicator = false
-    private(set) var viewModel: ProcFrameViewModel
     private var stateMachine: GKStateMachine!
+    private(set) var viewModel: ProcFrameViewModel
     
     var targetNode: SKSpriteNode?
     
@@ -34,9 +34,10 @@ class CanvaSpriteScene: SKScene {
         backgroundColor = .white
         setupCamera()
         stateMachine = GKStateMachine(states: [
-            SelectionState(scene: self),
-            RotationState(scene: self),
-            ParentState(scene: self)
+            SelectionState(scene: self, viewModel: viewModel),
+            RotationState(scene: self, viewModel: viewModel),
+            ParentState(scene: self, viewModel: viewModel),
+            DepthState(scene: self, viewModel: viewModel)
         ])
         
         stateMachine.enter(SelectionState.self)
@@ -216,6 +217,8 @@ extension CanvaSpriteScene {
             node?.drawOutline(color: .orange)
         case .parent:
             node?.drawOutline(color: .cyan)
+        case .depth:
+            node?.drawOutline(color: .purple)
         }
     }
     
@@ -224,7 +227,7 @@ extension CanvaSpriteScene {
         setHighlight(to: targetNode)
     }
     
-    func setHighlightToTargetAndChilds() {
+    func setHighlightToTargetAndChildren() {
         guard let targetNode = targetNode else { return }
         setHighlight(to: targetNode)
         for child in targetNode.children {
@@ -253,28 +256,41 @@ extension CanvaSpriteScene {
         case .deleteNode:
             removeSelectedNode()
         case .moveBack:
-            if let selectedNode = targetNode, let nodeID = selectedNode.nodeID {
-                viewModel.moveNodeInList(nodeID: nodeID, direction: -1)
-            }
+            moveTargetNode(direction: .backward)
         case .moveFront:
-            if let selectedNode = targetNode, let nodeID = selectedNode.nodeID {
-                viewModel.moveNodeInList(nodeID: nodeID, direction: +1)
-            }
+            moveTargetNode(direction: .forward)
         }
     }
     
-    func handleSelectionState() {
-        viewModel.setEditionMode(to: .selection)
+    private func moveTargetNode(direction: DepthOrientation) {
+        guard let selectedNode = targetNode, let nodeID = selectedNode.nodeID,
+        let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        viewModel.editionType = .depth
+        stateMachine.enter(DepthState.self)
+        
+        switch direction {
+        case .forward:
+            selectedNode.zPosition +=  1
+        case .backward:
+            selectedNode.zPosition -=  1
+        }
+        
+        viewModel.nodes[index].zPosition = selectedNode.zPosition
+        viewModel.reorderNodesByZPosition()
+    }
+    
+    private func handleSelectionState() {
+        viewModel.editionType = .selection
         stateMachine.enter(SelectionState.self)
     }
     
-    func handleRotationState() {
-        viewModel.setEditionMode(to: .rotation)
+    private func handleRotationState() {
+        viewModel.editionType = .rotation
         stateMachine.enter(RotationState.self)
     }
     
-    func handleParentingState() {
-        viewModel.setEditionMode(to: .parent)
+    private func handleParentingState() {
+        viewModel.editionType = .parent
         stateMachine.enter(ParentState.self)
     }
 }
@@ -289,9 +305,7 @@ extension CanvaSpriteScene {
             return
         }
         
-        if tappedNode.name == "outline" {
-            return
-        }
+        if tappedNode.name == "outline" { return }
         
         guard let tappedSprite = tappedNode as? SKSpriteNode, tappedSprite.name?.contains("-EDT-") == true else {
             removeParentingHighlightsFromTarget()
@@ -302,28 +316,23 @@ extension CanvaSpriteScene {
         
         if tappedSprite == targetNode { return }
         
-        switch viewModel.editionType {
-        case .selection:
+        if stateMachine.currentState is DepthState {
+            viewModel.editionType = .selection
+            stateMachine.enter(SelectionState.self)
+        }
+        
+        switch stateMachine.currentState {
+        case is SelectionState, is RotationState:
             targetNode?.removeOutline()
             targetNode = tappedSprite
             updateAnchorPointIndicator(for: tappedSprite)
             viewModel.selectedNodeID = tappedSprite.nodeID
             setHighlight(to: targetNode)
             
-        case .rotation:
-            targetNode?.removeOutline()
-            targetNode = tappedSprite
-            updateAnchorPointIndicator(for: tappedSprite)
-            viewModel.selectedNodeID = tappedSprite.nodeID
-            setHighlight(to: targetNode)
-            
-        case .parent:
+        case is ParentState:
             if targetNode == nil {
                 targetNode = tappedSprite
-                setHighlight(to: targetNode)
-                targetNode?.children
-                    .compactMap { $0 as? SKSpriteNode }
-                    .forEach { setHighlight(to: $0) }
+                setHighlightToTargetAndChildren()
                 return
             }
             
@@ -331,14 +340,14 @@ extension CanvaSpriteScene {
                   let procNode = viewModel.nodes.first(where: { $0.id == tappedNodeID }) else {
                 return
             }
-            
-            if procNode.parentID != nil {
-                return
-            }
-            
+            if procNode.parentID != nil { return }
+            tappedSprite.zPosition = 1
             targetNode?.adoptChild(tappedSprite, from: self)
             setHighlight(to: tappedSprite)
-            updateProcNodeParenting(forParent: targetNode!.nodeID!, child: tappedNodeID)
+            updateProcNodeParenting(forParent: targetNode!, child: tappedSprite)
+            
+        default:
+            break
         }
     }
 }
@@ -368,38 +377,38 @@ extension CanvaSpriteScene {
 
 // MARK: - Update methods
 extension CanvaSpriteScene {
-    private func updateProcNodeParenting(forParent parentID: UUID, child childID: UUID) {
-        guard let parentIndex = viewModel.nodes.firstIndex(where: { $0.id == parentID }),
-              let childIndex = viewModel.nodes.firstIndex(where: { $0.id == childID }) else {
+    private func updateProcNodeParenting(forParent targetNode: SKSpriteNode, child newChild: SKSpriteNode) {
+        guard let parentID = targetNode.nodeID,
+              let childID = newChild.nodeID,
+              let parentIndex = viewModel.nodes.firstIndex(where: { $0.id == parentID }),
+              let childIndex = viewModel.nodes.firstIndex(where: { $0.id == childID }),
+              viewModel.nodes[childIndex].parentID == nil else {
             return
         }
         
-        if viewModel.nodes[childIndex].parentID != nil { return }
-        
-        var parentNode = viewModel.nodes[parentIndex]
-        var childNode = viewModel.nodes[childIndex]
-        
-        parentNode.addChild(childNode)
-        childNode.parentID = parentNode.id
-        
-        viewModel.nodes[parentIndex] = parentNode
-        viewModel.nodes[childIndex] = childNode
+        viewModel.nodes[parentIndex].addChild(viewModel.nodes[childIndex].id)
+        viewModel.updateProcNode(from: newChild)
+        viewModel.reorderNodesByZPosition()
     }
     
     func updateNodes() {
+        var existingNodes = children.compactMap { $0 as? SKSpriteNode }.reduce(into: [UUID: SKSpriteNode]()) {
+            if let nodeID = $1.nodeID {
+                $0[nodeID] = $1
+            }
+        }
+        
+        var newTargetNode: SKSpriteNode?
+        
         for procNode in viewModel.nodes {
-            if let spriteNode = self.findNode(withID: procNode.id) {
+            if let spriteNode = existingNodes[procNode.id] {
                 spriteNode.position = procNode.position
                 spriteNode.zRotation = procNode.rotation
                 spriteNode.xScale = procNode.scale.x
                 spriteNode.yScale = procNode.scale.y
+                spriteNode.zPosition = procNode.zPosition
                 spriteNode.alpha = procNode.opacity
                 spriteNode.anchorPoint = procNode.anchorPoint
-                
-                if viewModel.selectedNodeID == procNode.id {
-                    updateAnchorPointIndicator(for: spriteNode)
-                    targetNode = spriteNode
-                }
             } else {
                 let texture = SKTexture(image: procNode.image.fullImage)
                 let spriteNode = SKSpriteNode(texture: texture)
@@ -408,29 +417,25 @@ extension CanvaSpriteScene {
                 spriteNode.zRotation = procNode.rotation
                 spriteNode.xScale = procNode.scale.x
                 spriteNode.yScale = procNode.scale.y
+                spriteNode.zPosition = procNode.zPosition
                 spriteNode.alpha = procNode.opacity
                 spriteNode.anchorPoint = procNode.anchorPoint
                 spriteNode.name = procNode.nodeName
                 spriteNode.userData = ["id": procNode.id.uuidString]
                 
                 addChild(spriteNode)
-                
-                if viewModel.selectedNodeID == procNode.id {
-                    setHighlight(to: spriteNode)
-                    updateAnchorPointIndicator(for: spriteNode)
-                    targetNode = spriteNode
-                }
+                existingNodes[procNode.id] = spriteNode
+            }
+            
+            if viewModel.selectedNodeID == procNode.id {
+                newTargetNode = existingNodes[procNode.id]
             }
         }
-        syncZPositions()
-    }
-    
-    func syncZPositions() {
-        for (index, procNode) in viewModel.nodes.enumerated() {
-            if let spriteNode = self.findNode(withID: procNode.id) {
-                spriteNode.zPosition = CGFloat(index)
-                viewModel.nodes[index].zPosition = CGFloat(index)
-            }
+        
+        if let selectedNode = newTargetNode {
+            setHighlight(to: selectedNode)
+            updateAnchorPointIndicator(for: selectedNode)
+            targetNode = selectedNode
         }
     }
 }

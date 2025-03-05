@@ -16,14 +16,15 @@ struct ProcEditionPanel: View {
                 HStack {
                     Image(systemName: viewModel.editionType == .selection ? "cursorarrow.click" :
                             viewModel.editionType == .rotation ? "arrow.trianglehead.2.clockwise.rotate.90" :
-                            "link")
+                            viewModel.editionType == .parent ? "link" : "square.3.layers.3d")
                     .foregroundColor(viewModel.editionType == .selection ? .green :
                                         viewModel.editionType == .rotation ? .blue :
                             .purple)
                     
                     Text(viewModel.editionType == .selection ? "Modo: Seleção" :
                             viewModel.editionType == .rotation ? "Modo: Rotação" :
-                            "Modo: Parentalidade")
+                            viewModel.editionType == .parent ? "Modo: Parentalidade" :
+                            "Modo: Profundidade")
                     .font(.headline)
                     .foregroundColor(.primary)
                 }
