@@ -21,9 +21,46 @@ class InputController {
         scene.handleNodeSelection(at: location)
     }
     
+    func handleMouseUp(event: NSEvent) {
+        if scene.isDraggingAnchorIndicator,
+           let node = scene.targetNode,
+           let indicator = scene.anchorPointIndicator,
+           let nodeID = node.nodeID {
+            scene.nodeSelectionController.updateAnchorPoint(for: node, with: indicator, nodeID: nodeID)
+            scene.isDraggingAnchorIndicator = false
+            scene.nodeSelectionController.updateAnchorPointIndicator(for: node)
+            return
+        }
+        guard let selectedNode = scene.targetNode,
+              let nodeID = selectedNode.nodeID,
+              let index = scene.viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        scene.viewModel.nodes[index].position = selectedNode.position
+        scene.viewModel.nodes[index].anchorPoint = selectedNode.anchorPoint
+    }
+    
+    func handleKeyDown(event: NSEvent) {
+        guard let action = CanvasKeyAction(rawValue: event.keyCode) else {
+            return
+        }
+        switch action {
+        case .enterSelectionState:
+            scene.handleSelectionState()
+        case .enterRotationState:
+            scene.handleRotationState()
+        case .enterParentState:
+            scene.handleParentingState()
+        case .deleteNode:
+            scene.nodeLifecycleController.removeSelectedNode()
+        case .moveBack:
+            scene.moveTargetNode(direction: .backward)
+        case .moveFront:
+            scene.moveTargetNode(direction: .forward)
+        }
+    }
+    
     func handleMouseDragged(event: NSEvent) {
         if scene.isDraggingAnchorIndicator {
-            scene.handleAnchorIndicatorDrag(with: event)
+            scene.nodeSelectionController.handleAnchorIndicatorDrag(with: event)
             return
         }
         let currentPosition = event.location(in: scene)
@@ -47,42 +84,5 @@ class InputController {
                                             y: selectedNode.position.y + deltaY)
         }
         scene.lastMousePosition = currentPosition
-    }
-    
-    func handleMouseUp(event: NSEvent) {
-        if scene.isDraggingAnchorIndicator,
-           let node = scene.targetNode,
-           let indicator = scene.anchorPointIndicator,
-           let nodeID = node.nodeID {
-            scene.updateAnchorPoint(for: node, with: indicator, nodeID: nodeID)
-            scene.isDraggingAnchorIndicator = false
-            scene.updateAnchorPointIndicator(for: node)
-            return
-        }
-        guard let selectedNode = scene.targetNode,
-              let nodeID = selectedNode.nodeID,
-              let index = scene.viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
-        scene.viewModel.nodes[index].position = selectedNode.position
-        scene.viewModel.nodes[index].anchorPoint = selectedNode.anchorPoint
-    }
-    
-    func handleKeyDown(event: NSEvent) {
-        guard let action = CanvasKeyAction(rawValue: event.keyCode) else {
-            return
-        }
-        switch action {
-        case .enterSelectionState:
-            scene.handleSelectionState()
-        case .enterRotationState:
-            scene.handleRotationState()
-        case .enterParentState:
-            scene.handleParentingState()
-        case .deleteNode:
-            scene.nodeController.removeSelectedNode()
-        case .moveBack:
-            scene.moveTargetNode(direction: .backward)
-        case .moveFront:
-            scene.moveTargetNode(direction: .forward)
-        }
     }
 }

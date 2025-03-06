@@ -22,7 +22,7 @@ class SelectionState: GKState {
     }
 
     override func didEnter(from previousState: GKState?) {
-        scene?.setHighlightToTarget()
+        scene?.nodeSelectionController?.setHighlightToTarget()
     }
 }
 
@@ -40,7 +40,7 @@ class RotationState: GKState {
     }
 
     override func didEnter(from previousState: GKState?) {
-        scene?.setHighlightToTarget()
+        scene?.nodeSelectionController.setHighlightToTarget()
     }
 }
 
@@ -58,11 +58,11 @@ class ParentState: GKState {
     }
 
     override func didEnter(from previousState: GKState?) {
-        scene?.setHighlightToTargetAndChildren()
+        scene?.nodeSelectionController.setHighlightToTargetAndChildren()
     }
     
     override func willExit(to nextState: GKState) {
-        scene?.removeParentingHighlightsFromTarget()
+        scene?.nodeSelectionController.removeParentingHighlightsFromTarget()
     }
 }
 
@@ -80,7 +80,7 @@ class DepthState: GKState {
     }
 
     override func didEnter(from previousState: GKState?) {
-        scene?.setHighlightToTarget()
+        scene?.nodeSelectionController.setHighlightToTarget()
     }
     
     override func willExit(to nextState: GKState) { }

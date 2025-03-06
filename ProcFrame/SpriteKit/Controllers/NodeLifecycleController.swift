@@ -45,8 +45,8 @@ class NodeLifecycleController {
         }
         
         if let selectedNode = newTargetNode {
-            scene.setHighlight(to: selectedNode)
-            scene.updateAnchorPointIndicator(for: selectedNode)
+            scene.nodeSelectionController.setHighlight(to: selectedNode)
+            scene.nodeSelectionController.updateAnchorPointIndicator(for: selectedNode)
             scene.targetNode = selectedNode
         }
     }

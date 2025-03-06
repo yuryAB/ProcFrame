@@ -106,13 +106,13 @@ struct SpriteCanvasView: View {
             .frame(width: 700, height: 600)
             .onChange(of: viewModel.nodes) {
                 if viewModel.nodes.count > viewModel.previousNodeCount {
-                    viewModel.spriteScene.nodeController.updateNodes()
+                    viewModel.spriteScene.nodeLifecycleController.updateNodes()
                     viewModel.isStructuralChange = false
                 }
                 viewModel.previousNodeCount = viewModel.nodes.count
             }
             .onChange(of: viewModel.selectedNodeID) {
-                viewModel.spriteScene.updateHighlight(for: viewModel.selectedNodeID)
+                viewModel.spriteScene.nodeSelectionController.updateHighlight(for: viewModel.selectedNodeID)
             }
     }
 }
