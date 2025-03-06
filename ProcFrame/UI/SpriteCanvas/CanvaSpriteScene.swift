@@ -298,57 +298,62 @@ extension CanvaSpriteScene {
 // MARK: - Selection handle
 extension CanvaSpriteScene {
     private func handleNodeSelection(at location: CGPoint) {
-        let tappedNode = atPoint(location)
-        
-        if tappedNode.name == "anchorIndicator" {
-            isDraggingAnchorIndicator = true
-            return
-        }
-        
-        if tappedNode.name == "outline" { return }
-        
-        guard let tappedSprite = tappedNode as? SKSpriteNode, tappedSprite.name?.contains("-EDT-") == true else {
-            removeParentingHighlightsFromTarget()
-            deselectCurrentNode()
-            removeAnchorPointIndicator()
-            return
-        }
-        
-        if tappedSprite == targetNode { return }
-        
-        if stateMachine.currentState is DepthState {
-            viewModel.editionType = .selection
-            stateMachine.enter(SelectionState.self)
-        }
-        
-        switch stateMachine.currentState {
-        case is SelectionState, is RotationState:
-            targetNode?.removeOutline()
-            targetNode = tappedSprite
-            updateAnchorPointIndicator(for: tappedSprite)
-            viewModel.selectedNodeID = tappedSprite.nodeID
-            setHighlight(to: targetNode)
-            
-        case is ParentState:
-            if targetNode == nil {
-                targetNode = tappedSprite
-                setHighlightToTargetAndChildren()
+        let nodesAtPoint = nodes(at: location)
+
+        for node in nodesAtPoint {
+            if node.name == "anchorIndicator" {
+                isDraggingAnchorIndicator = true
                 return
             }
-            
-            guard let tappedNodeID = tappedSprite.nodeID,
-                  let procNode = viewModel.nodes.first(where: { $0.id == tappedNodeID }) else {
-                return
+
+            guard let spriteNode = node as? SKSpriteNode,
+                  spriteNode.name?.contains("-EDT-") == true,
+                  spriteNode.isPointVisible(location) else { 
+                continue
             }
-            if procNode.parentID != nil { return }
-            tappedSprite.zPosition = 1
-            targetNode?.adoptChild(tappedSprite, from: self)
-            setHighlight(to: tappedSprite)
-            updateProcNodeParenting(forParent: targetNode!, child: tappedSprite)
-            
-        default:
-            break
+
+            if spriteNode == targetNode { return }
+
+            if stateMachine.currentState is DepthState {
+                viewModel.editionType = .selection
+                stateMachine.enter(SelectionState.self)
+            }
+
+            switch stateMachine.currentState {
+            case is SelectionState, is RotationState:
+                targetNode?.removeOutline()
+                targetNode = spriteNode
+                updateAnchorPointIndicator(for: spriteNode)
+                viewModel.selectedNodeID = spriteNode.nodeID
+                setHighlight(to: targetNode)
+
+            case is ParentState:
+                if targetNode == nil {
+                    targetNode = spriteNode
+                    setHighlightToTargetAndChildren()
+                    return
+                }
+
+                guard let tappedNodeID = spriteNode.nodeID,
+                      let procNode = viewModel.nodes.first(where: { $0.id == tappedNodeID }) else {
+                    return
+                }
+
+                if procNode.parentID != nil { return }
+
+                spriteNode.zPosition = 1
+                targetNode?.adoptChild(spriteNode, from: self)
+                setHighlight(to: spriteNode)
+                updateProcNodeParenting(forParent: targetNode!, child: spriteNode)
+
+            default:
+                break
+            }
+
+            return
         }
+        deselectCurrentNode()
+        removeAnchorPointIndicator()
     }
 }
 
@@ -392,50 +397,54 @@ extension CanvaSpriteScene {
     }
     
     func updateNodes() {
-        var existingNodes = children.compactMap { $0 as? SKSpriteNode }.reduce(into: [UUID: SKSpriteNode]()) {
-            if let nodeID = $1.nodeID {
-                $0[nodeID] = $1
+        var existingNodes: [UUID: SKSpriteNode] = children.compactMap { $0 as? SKSpriteNode }
+            .reduce(into: [UUID: SKSpriteNode]()) { dict, node in
+                if let nodeID = node.nodeID {
+                    dict[nodeID] = node
+                }
             }
-        }
         
         var newTargetNode: SKSpriteNode?
-        
+
         for procNode in viewModel.nodes {
-            if let spriteNode = existingNodes[procNode.id] {
-                spriteNode.position = procNode.position
-                spriteNode.zRotation = procNode.rotation
-                spriteNode.xScale = procNode.scale.x
-                spriteNode.yScale = procNode.scale.y
-                spriteNode.zPosition = procNode.zPosition
-                spriteNode.alpha = procNode.opacity
-                spriteNode.anchorPoint = procNode.anchorPoint
-            } else {
-                let texture = SKTexture(image: procNode.image.fullImage)
-                let spriteNode = SKSpriteNode(texture: texture)
-                
-                spriteNode.position = procNode.position
-                spriteNode.zRotation = procNode.rotation
-                spriteNode.xScale = procNode.scale.x
-                spriteNode.yScale = procNode.scale.y
-                spriteNode.zPosition = procNode.zPosition
-                spriteNode.alpha = procNode.opacity
-                spriteNode.anchorPoint = procNode.anchorPoint
-                spriteNode.name = procNode.nodeName
-                spriteNode.userData = ["id": procNode.id.uuidString]
-                
+            let spriteNode = existingNodes[procNode.id] ?? createSpriteNode(for: procNode)
+            
+            updateSpriteNode(spriteNode, with: procNode)
+            
+            if existingNodes[procNode.id] == nil {
                 addChild(spriteNode)
                 existingNodes[procNode.id] = spriteNode
             }
-            
+
             if viewModel.selectedNodeID == procNode.id {
-                newTargetNode = existingNodes[procNode.id]
+                newTargetNode = spriteNode
             }
         }
-        
+
         if let selectedNode = newTargetNode {
             setHighlight(to: selectedNode)
             updateAnchorPointIndicator(for: selectedNode)
             targetNode = selectedNode
         }
+    }
+
+    private func createSpriteNode(for procNode: ProcNode) -> SKSpriteNode {
+        let texture = SKTexture(image: procNode.image.fullImage)
+        let spriteNode = SKSpriteNode(texture: texture)
+        
+        spriteNode.name = procNode.nodeName
+        spriteNode.userData = ["id": procNode.id.uuidString]
+        
+        return spriteNode
+    }
+
+    private func updateSpriteNode(_ spriteNode: SKSpriteNode, with procNode: ProcNode) {
+        spriteNode.position = procNode.position
+        spriteNode.zRotation = procNode.rotation
+        spriteNode.xScale = procNode.scale.x
+        spriteNode.yScale = procNode.scale.y
+        spriteNode.zPosition = procNode.zPosition
+        spriteNode.alpha = procNode.opacity
+        spriteNode.anchorPoint = procNode.anchorPoint
     }
 }
