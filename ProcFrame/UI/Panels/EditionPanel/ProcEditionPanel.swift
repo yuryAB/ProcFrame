@@ -85,7 +85,6 @@ struct ProcEditionPanel: View {
                     
                     
                     HStack {
-                        
                         HStack(alignment: .center, spacing: 16) {
                             Image(systemName: "square.stack")
                                 .frame(width: 24)

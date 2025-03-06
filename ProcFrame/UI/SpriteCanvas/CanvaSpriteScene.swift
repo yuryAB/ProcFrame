@@ -13,7 +13,7 @@ import GameplayKit
 class CanvaSpriteScene: SKScene {
     private var cameraNode = SKCameraNode()
     private var lastMousePosition: CGPoint?
-    private var anchorPointIndicator: SKShapeNode?
+    private var anchorPointIndicator: SKSpriteNode?
     private var rotationIndicator: SKShapeNode?
     private var isDraggingAnchorIndicator = false
     private var stateMachine: GKStateMachine!
@@ -87,13 +87,27 @@ extension CanvaSpriteScene {
             handleAnchorIndicatorDrag(with: event)
             return
         }
+        
         let currentPosition = event.location(in: self)
-        if let selectedNode = targetNode {
+        guard let selectedNode = targetNode else {
+            lastMousePosition = currentPosition
+            return
+        }
+        
+        if let parent = selectedNode.parent {
+            let previousLocationInParent = parent.convert(lastMousePosition ?? currentPosition, from: self)
+            let currentLocationInParent = parent.convert(currentPosition, from: self)
+            let deltaX = currentLocationInParent.x - previousLocationInParent.x
+            let deltaY = currentLocationInParent.y - previousLocationInParent.y
+            selectedNode.position = CGPoint(x: selectedNode.position.x + deltaX,
+                                            y: selectedNode.position.y + deltaY)
+        } else {
             let deltaX = currentPosition.x - (lastMousePosition?.x ?? currentPosition.x)
             let deltaY = currentPosition.y - (lastMousePosition?.y ?? currentPosition.y)
-            selectedNode.position.x += deltaX
-            selectedNode.position.y += deltaY
+            selectedNode.position = CGPoint(x: selectedNode.position.x + deltaX,
+                                            y: selectedNode.position.y + deltaY)
         }
+        
         lastMousePosition = currentPosition
     }
     
@@ -127,7 +141,7 @@ extension CanvaSpriteScene {
 
 // MARK: - Anchor point
 extension CanvaSpriteScene {
-    private func updateAnchorPoint(for node: SKSpriteNode, with indicator: SKShapeNode, nodeID: UUID) {
+    private func updateAnchorPoint(for node: SKSpriteNode, with indicator: SKSpriteNode, nodeID: UUID) {
         guard let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
         
         let oldAnchor = node.anchorPoint
@@ -168,12 +182,15 @@ extension CanvaSpriteScene {
     
     private func updateAnchorPointIndicator(for node: SKSpriteNode) {
         anchorPointIndicator?.removeFromParent()
-        let indicator = SKShapeNode(circleOfRadius: 10)
-        indicator.fillColor = .brown
-        indicator.strokeColor = .blue
-        indicator.position = .zero
+
+        let systemImage = NSImage(systemSymbolName: "dot.scope", accessibilityDescription: nil)!
+        let texture = SKTexture(image: systemImage)
+
+        let indicator = SKSpriteNode(texture: texture)
+        indicator.size = CGSize(width: 45, height: 45)
         indicator.zPosition = 20
         indicator.name = "anchorIndicator"
+
         node.addChild(indicator)
         anchorPointIndicator = indicator
     }
@@ -231,7 +248,7 @@ extension CanvaSpriteScene {
         guard let targetNode = targetNode else { return }
         setHighlight(to: targetNode)
         for child in targetNode.children {
-            if let targetChild = child as? SKSpriteNode {
+            if let targetChild = child as? SKSpriteNode, targetChild.name?.contains("-EDT-") == true {
                 setHighlight(to: targetChild)
             }
         }
@@ -308,7 +325,7 @@ extension CanvaSpriteScene {
 
             guard let spriteNode = node as? SKSpriteNode,
                   spriteNode.name?.contains("-EDT-") == true,
-                  spriteNode.isPointVisible(location) else { 
+                  spriteNode.isPointVisible(location) else {
                 continue
             }
 

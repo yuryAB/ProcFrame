@@ -15,9 +15,12 @@ extension SKNode {
     
     func adoptChild(_ child: SKNode, from scene: SKScene) {
         let globalPosition = child.position
+        let worldRotation = child.zRotation
+        
         let localPosition = self.convert(globalPosition, from: scene)
         child.removeFromParent()
         child.position = localPosition
+        child.zRotation = worldRotation - self.zRotation
         self.addChild(child)
     }
     

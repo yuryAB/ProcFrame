@@ -16,7 +16,7 @@ extension SKSpriteNode {
                                   cornerRadius: 5)
         outline.strokeColor = color
         outline.lineWidth = width
-        outline.zPosition = -1
+        outline.zPosition = 50
         outline.name = "outline"
         outline.isUserInteractionEnabled = false
         
