@@ -8,16 +8,30 @@
 import SwiftUI
 
 struct ActionTrackView: View {
-    @Binding var actionMark: ActionMark
+    let startTime: Double
+    let endTime: Double
     let timelineDuration: Double
     let availableWidth: CGFloat
+    let interpolation: KeyframeInterpolation
+    let isActive: Bool
+    let onMoveSegment: (Double) -> Void
+    let onUpdateEnd: (Double) -> Void
+    let onUpdateInterpolation: (KeyframeInterpolation) -> Void
+    let onDeleteStart: () -> Void
+    let onDeleteEnd: () -> Void
+    
+    private var segmentDuration: Double {
+        max(0, endTime - startTime)
+    }
     
     private var computedWidth: CGFloat {
-        CGFloat(actionMark.duration / timelineDuration) * availableWidth
+        guard timelineDuration > 0 else { return 0 }
+        return CGFloat(segmentDuration / timelineDuration) * availableWidth
     }
     
     private var computedXPos: CGFloat {
-        CGFloat(actionMark.startTime / timelineDuration) * availableWidth
+        guard timelineDuration > 0 else { return 0 }
+        return CGFloat(startTime / timelineDuration) * availableWidth
     }
     
     private var totalWidth: CGFloat {
@@ -36,77 +50,63 @@ struct ActionTrackView: View {
     
     var body: some View {
         ZStack {
-            ActionTrackBackground(
-                actionMark: $actionMark,
-                timelineDuration: timelineDuration,
-                availableWidth: availableWidth,
-                totalWidth: totalWidth
-            )
+            ActionTrackBackground(totalWidth: totalWidth, isActive: isActive)
             HStack(spacing: 0) {
-                ActionTrackBorder(
-                    timelineDuration: timelineDuration,
-                    availableWidth: availableWidth,
-                    side: .left
-                ) { deltaTime in
-                    let newStartTime = max(0, min(actionMark.startTime + deltaTime, timelineDuration - actionMark.duration))
-                    actionMark.startTime = newStartTime
+                ActionTrackBorder(timelineDuration: timelineDuration,
+                                  availableWidth: availableWidth,
+                                  side: .left) { deltaTime in
+                    onMoveSegment(deltaTime)
                 }
                 
-                ActionTrackDisplay(
-                    actionMark: $actionMark,
-                    timelineDuration: timelineDuration,
-                    availableWidth: availableWidth
-                )
+                ActionTrackDisplay(width: computedWidth, label: interpolation.displayName)
                 
-                ActionTrackBorder(
-                    timelineDuration: timelineDuration,
-                    availableWidth: availableWidth,
-                    side: .right
-                ) { deltaTime in
-                    let newDuration = max(0.1, min(actionMark.duration + deltaTime, timelineDuration - actionMark.startTime))
-                    actionMark.duration = newDuration
+                ActionTrackBorder(timelineDuration: timelineDuration,
+                                  availableWidth: availableWidth,
+                                  side: .right) { deltaTime in
+                    onUpdateEnd(endTime + deltaTime)
                 }
             }
         }
         .position(x: clampedXPos + totalWidth / 2, y: 25)
+        .contextMenu {
+            ForEach(KeyframeInterpolation.allCases, id: \.self) { option in
+                Button(option.displayName) {
+                    onUpdateInterpolation(option)
+                }
+            }
+            Divider()
+            Button("Remove Start Keyframe") {
+                onDeleteStart()
+            }
+            Button("Remove End Keyframe") {
+                onDeleteEnd()
+            }
+        }
     }
 }
 
 struct ActionTrackBackground: View {
-    @Binding var actionMark: ActionMark
-    let timelineDuration: Double
-    let availableWidth: CGFloat
     let totalWidth: CGFloat
-    
-    private var computedWidth: CGFloat {
-        CGFloat(actionMark.duration / timelineDuration) * availableWidth
-    }
+    let isActive: Bool
     
     var body: some View {
         Rectangle()
-            .fill(Color(.white))
+            .fill(isActive ? Color.green.opacity(0.7) : Color.white)
             .frame(width: totalWidth, height: 30)
             .cornerRadius(5)
     }
 }
 
 struct ActionTrackDisplay: View {
-    @Binding var actionMark: ActionMark
-    let timelineDuration: Double
-    let availableWidth: CGFloat
-    
-    private var computedWidth: CGFloat {
-        CGFloat(actionMark.duration / timelineDuration) * availableWidth
-    }
+    let width: CGFloat
+    let label: String
     
     var body: some View {
-        Button(action: {
-            // Sua lógica de ação aqui
-        }) {
-            Text("action")
+        Button(action: { }) {
+            Text(label)
                 .font(.thinInfo)
                 .foregroundColor(.primary)
-                .frame(width: computedWidth, height: 25)
+                .frame(width: width, height: 25)
                 .background(Color.mainDark)
                 .cornerRadius(5)
         }

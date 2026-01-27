@@ -16,9 +16,12 @@ struct TimelineSettingsView: View {
     var body: some View {
         HStack {
             Spacer()
+            Text("Tempo (s):")
+                .font(.subheadline)
+            AdjustableValueView(value: $currentTime, range: 0...timelineDuration)
             Text("Duração (s):")
                 .font(.subheadline)
-            AdjustableValueView(value: $timelineDuration, range: 0...100)
+            AdjustableValueView(value: $timelineDuration, range: 0.1...100)
             Button(action: togglePlayback) {
                 Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                     .padding(8)
@@ -34,8 +37,8 @@ struct AdjustableValueView: View {
     let range: ClosedRange<Double>
     
     @State private var isEditing = false
-    @State private var dragOffset: CGFloat = 0
     @State private var lastValue: Double = 0
+    @State private var isDragging = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -46,12 +49,17 @@ struct AdjustableValueView: View {
                 .gesture(
                     DragGesture()
                         .onChanged { gesture in
+                            if !isDragging {
+                                lastValue = value
+                                isDragging = true
+                            }
                             let delta = Double(gesture.translation.width) * 0.1
                             let newValue = lastValue + delta
-                            value = max(0.5, min(newValue, range.upperBound))
+                            value = min(max(newValue, range.lowerBound), range.upperBound)
                         }
                         .onEnded { _ in
                             lastValue = value
+                            isDragging = false
                         }
                 )
             
@@ -74,6 +82,14 @@ struct AdjustableValueView: View {
                     .onTapGesture {
                         isEditing = true
                     }
+            }
+        }
+        .onAppear {
+            lastValue = value
+        }
+        .onChange(of: value) {
+            if !isEditing && !isDragging {
+                lastValue = value
             }
         }
     }

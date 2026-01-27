@@ -14,23 +14,37 @@ class CustomSKView: SKView {
     var sceneAdapter: SpriteSceneAdapter!
     var nodeStore: NodeStore!
     var logStore: LogStore?
+    private var isMiddleMouseDragging = false
+    private var lastMiddleMousePosition: CGPoint?
     
     override func scrollWheel(with event: NSEvent) {
-        if event.hasPreciseScrollingDeltas {
-            let delta = CGPoint(
-                x: event.scrollingDeltaX,
-                y: event.scrollingDeltaY
-            )
+        if event.modifierFlags.contains(.command) {
+            let zoomDelta: CGFloat = event.scrollingDeltaY * 0.01
+            sceneAdapter.zoomCamera(by: zoomDelta)
+            super.scrollWheel(with: event)
+            return
+        }
+
+        let isMouseScroll = event.phase == .none && event.momentumPhase == .none
+
+        if isMouseScroll {
             if nodeStore.editionType != .rotation {
+                let delta = CGPoint(
+                    x: event.scrollingDeltaX,
+                    y: event.scrollingDeltaY
+                )
                 sceneAdapter.moveCamera(by: delta)
             } else {
                 let yDelta: CGFloat = event.scrollingDeltaY
                 sceneAdapter.rotateSelectedNode(by: yDelta)
             }
         } else {
-            let zoomDelta: CGFloat = event.scrollingDeltaY * 0.01
+            let delta = CGPoint(
+                x: event.scrollingDeltaX,
+                y: event.scrollingDeltaY
+            )
             if nodeStore.editionType != .rotation {
-                sceneAdapter.zoomCamera(by: zoomDelta)
+                sceneAdapter.moveCamera(by: delta)
             } else {
                 let yDelta: CGFloat = event.scrollingDeltaY
                 sceneAdapter.rotateSelectedNode(by: yDelta)
@@ -42,14 +56,33 @@ class CustomSKView: SKView {
     override func otherMouseDown(with event: NSEvent) {
         logStore?.addLog("Middle mouse click detected at: \(event.locationInWindow)")
         if event.buttonNumber == 2 {
-            let delta = CGPoint(
-                x: event.scrollingDeltaX,
-                y: event.scrollingDeltaY
-            )
-            sceneAdapter.moveCamera(by: delta)
+            isMiddleMouseDragging = true
+            lastMiddleMousePosition = event.locationInWindow
         } else {
             super.otherMouseDown(with: event)
         }
+    }
+
+    override func otherMouseDragged(with event: NSEvent) {
+        if isMiddleMouseDragging {
+            let currentPosition = event.locationInWindow
+            let previousPosition = lastMiddleMousePosition ?? currentPosition
+            let deltaX = currentPosition.x - previousPosition.x
+            let deltaY = currentPosition.y - previousPosition.y
+            sceneAdapter.moveCamera(by: CGPoint(x: deltaX, y: -deltaY))
+            lastMiddleMousePosition = currentPosition
+            return
+        }
+        super.otherMouseDragged(with: event)
+    }
+
+    override func otherMouseUp(with event: NSEvent) {
+        if event.buttonNumber == 2 {
+            isMiddleMouseDragging = false
+            lastMiddleMousePosition = nil
+            return
+        }
+        super.otherMouseUp(with: event)
     }
 }
 
@@ -106,7 +139,7 @@ struct SpriteCanvasView: View {
         CustomSpriteView(sceneAdapter: sceneAdapter, nodeStore: store, logStore: logStore)
             .frame(width: 750, height: 600)
             .onChange(of: store.nodes) {
-                if sceneAdapter.syncNodesIfNeeded(previousCount: &store.previousNodeCount, forceUpdate: store.isStructuralChange) {
+                if sceneAdapter.syncNodesIfNeeded(previousCount: &store.previousNodeCount, forceUpdate: true) {
                     store.isStructuralChange = false
                 }
             }

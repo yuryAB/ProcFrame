@@ -1,18 +1,32 @@
 import Foundation
 import Combine
-import SwiftUI
 
 final class ActionTimelineViewModel: ObservableObject {
-    @Published var currentTime: Double = 0
-    @Published var isPlaying: Bool = false
-    @Published var timelineDuration: Double = 1.0
+    @Published var currentTime: Double = 0 {
+        didSet {
+            updateCurrentTime()
+        }
+    }
+    @Published var isPlaying: Bool = false {
+        didSet {
+            store.isPlaying = isPlaying
+        }
+    }
+    @Published var timelineDuration: Double = 1.0 {
+        didSet {
+            updateTimelineDuration()
+        }
+    }
 
     private let store: ProcFrameViewModel
     private var cancellable: AnyCancellable?
     private var timer: Timer?
+    private var isUpdatingTime = false
 
     init(store: ProcFrameViewModel) {
         self.store = store
+        self.currentTime = store.currentTime
+        self.timelineDuration = store.timeline.duration
         self.cancellable = store.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
@@ -27,23 +41,27 @@ final class ActionTimelineViewModel: ObservableObject {
         set { store.selectedNodeID = newValue }
     }
 
-    func addActionMark(for nodeID: UUID, startTime: Double, duration: Double) {
-        store.addActionMark(for: nodeID, startTime: startTime, duration: duration)
+    func addKeyframe(for nodeID: UUID) {
+        store.addKeyframe(for: nodeID, time: currentTime)
     }
 
-    func bindingForActionMark(at index: Int) -> Binding<ActionMark> {
-        Binding<ActionMark>(
-            get: { self.store.actionMarks[index] },
-            set: { self.store.actionMarks[index] = $0 }
-        )
+    func keyframes(for nodeID: UUID) -> [TransformKeyframe] {
+        store.keyframes(for: nodeID)
     }
 
-    var actionMarkIndices: [Int] {
-        store.actionMarks.indices.map { $0 }
+    func updateKeyframeTime(nodeID: UUID, keyframeID: UUID, newTime: Double) {
+        store.updateKeyframeTime(nodeID: nodeID, keyframeID: keyframeID, newTime: newTime)
+        store.applyTimeline(at: currentTime)
     }
 
-    var actionMarks: [ActionMark] {
-        store.actionMarks
+    func removeKeyframe(nodeID: UUID, keyframeID: UUID) {
+        store.removeKeyframe(nodeID: nodeID, keyframeID: keyframeID)
+        store.applyTimeline(at: currentTime)
+    }
+
+    func updateKeyframeInterpolation(nodeID: UUID, keyframeID: UUID, interpolation: KeyframeInterpolation) {
+        store.updateKeyframeInterpolation(nodeID: nodeID, keyframeID: keyframeID, interpolation: interpolation)
+        store.applyTimeline(at: currentTime)
     }
 
     func togglePlayback() {
@@ -72,6 +90,32 @@ final class ActionTimelineViewModel: ObservableObject {
         isPlaying = false
         timer?.invalidate()
         timer = nil
+    }
+
+    private func updateCurrentTime() {
+        guard !isUpdatingTime else { return }
+        isUpdatingTime = true
+        let clampedTime = max(0, min(currentTime, timelineDuration))
+        if clampedTime != currentTime {
+            currentTime = clampedTime
+            isUpdatingTime = false
+            return
+        }
+        store.currentTime = clampedTime
+        store.applyTimeline(at: clampedTime)
+        isUpdatingTime = false
+    }
+
+    private func updateTimelineDuration() {
+        let clampedDuration = max(0.1, timelineDuration)
+        if clampedDuration != timelineDuration {
+            timelineDuration = clampedDuration
+            return
+        }
+        store.updateTimelineDuration(clampedDuration)
+        if currentTime > clampedDuration {
+            currentTime = clampedDuration
+        }
     }
 
     deinit {

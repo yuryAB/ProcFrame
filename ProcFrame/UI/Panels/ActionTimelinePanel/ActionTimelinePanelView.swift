@@ -18,8 +18,7 @@ struct ActionTimelinePanelView: View {
                                  togglePlayback: viewModel.togglePlayback)
             TimelineTrackView(viewModel: viewModel,
                               timelineDuration: $viewModel.timelineDuration,
-                              currentTime: $viewModel.currentTime,
-                              isPlaying: $viewModel.isPlaying)
+                              currentTime: $viewModel.currentTime)
         }
         .padding(10)
         .background(Color(nsColor: .controlColor))
