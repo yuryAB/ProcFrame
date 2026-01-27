@@ -87,6 +87,26 @@ class NodeLifecycleController {
         updateProcNode(from: newChild)
         nodeStore.reorderNodesByZPosition()
     }
+
+    func detachChild(_ child: SKSpriteNode) {
+        guard let childID = child.nodeID,
+              let parent = child.parent as? SKSpriteNode,
+              let parentID = parent.nodeID,
+              let parentIndex = nodeStore.nodes.firstIndex(where: { $0.id == parentID }),
+              let childIndex = nodeStore.nodes.firstIndex(where: { $0.id == childID }) else { return }
+
+        let parentZ = nodeStore.nodes[parentIndex].zPosition
+        let childZ = nodeStore.nodes[childIndex].zPosition
+
+        _ = nodeStore.nodes[parentIndex].removeChild(childID)
+        nodeStore.nodes[childIndex].parentID = nil
+        nodeStore.nodes[childIndex].zPosition = parentZ + childZ
+
+        child.emancipate(to: scene)
+        child.zPosition = nodeStore.nodes[childIndex].zPosition
+
+        nodeStore.reorderNodesByZPosition()
+    }
     
     func removeNode(nodeID: UUID) {
         guard let nodeToRemove = scene.children.first(where: { $0.nodeID == nodeID }) as? SKSpriteNode else { return }

@@ -63,11 +63,22 @@ class NodeSelectionController {
             setHighlightToTargetAndChildren()
             return
         }
+
+        if spriteNode == scene.targetNode {
+            return
+        }
         
         guard let tappedNodeID = spriteNode.nodeID,
-              let procNode = scene.nodeStore.nodes.first(where: { $0.id == tappedNodeID }),
-              procNode.parentID == nil else { return }
-        
+              let procNode = scene.nodeStore.nodes.first(where: { $0.id == tappedNodeID }) else { return }
+
+        if procNode.parentID == scene.targetNode?.nodeID {
+            scene.nodeLifecycleController.detachChild(spriteNode)
+            setHighlightToTargetAndChildren()
+            return
+        }
+
+        guard procNode.parentID == nil else { return }
+
         spriteNode.zPosition = 1
         scene.targetNode?.adoptChild(spriteNode, from: scene)
         setHighlight(to: spriteNode)
