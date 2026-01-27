@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProcEditionPanel: View {
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    @ObservedObject var viewModel: EditionPanelViewModel
     
     var body: some View {
         Group {
@@ -31,7 +31,7 @@ struct ProcEditionPanel: View {
                 .padding()
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(8)
-                if let nodeBinding = selectedProcNode() {
+                if let nodeBinding = viewModel.selectedProcNodeBinding() {
                     if let message = viewModel.notificationMessage, let type = viewModel.notificationType {
                         Text(message)
                             .foregroundColor(type == .error ? .red : (type == .warning ? .yellow : .green))
@@ -39,7 +39,7 @@ struct ProcEditionPanel: View {
                             .background(Color.black.opacity(0.8))
                             .cornerRadius(8)
                             .transition(.opacity)
-                            .animation(.easeInOut)
+                            .contentTransition(.numericText())
                     }
                     HStack {
                         HStack(alignment: .center, spacing: 16) {
@@ -123,13 +123,6 @@ struct ProcEditionPanel: View {
     }
     
     // MARK: - Bindings
-    
-    private func selectedProcNode() -> Binding<ProcNode>? {
-        guard let selectedID = viewModel.selectedNodeID,
-              let index = viewModel.nodes.firstIndex(where: { $0.id == selectedID })
-        else { return nil }
-        return $viewModel.nodes[index]
-    }
     
     private var numberFormatter: NumberFormatter {
         let nf = NumberFormatter()

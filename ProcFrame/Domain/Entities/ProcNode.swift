@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftUI
+import CoreGraphics
 
 struct ProcScale: Equatable, Hashable {
     var x: CGFloat = 1.0

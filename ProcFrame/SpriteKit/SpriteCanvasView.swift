@@ -11,42 +11,42 @@ import SwiftUI
 
 // MARK: - CustomSKView: Scroll and Special Click Events
 class CustomSKView: SKView {
-    var viewModel: ProcFrameViewModel!
+    var sceneAdapter: SpriteSceneAdapter!
+    var nodeStore: NodeStore!
+    var logStore: LogStore?
     
     override func scrollWheel(with event: NSEvent) {
-        guard let scene = self.scene as? CanvaSpriteScene else { return }
         if event.hasPreciseScrollingDeltas {
             let delta = CGPoint(
                 x: event.scrollingDeltaX,
                 y: event.scrollingDeltaY
             )
-            if viewModel.editionType != .rotation {
-                scene.cameraController.moveCamera(by: delta)
+            if nodeStore.editionType != .rotation {
+                sceneAdapter.moveCamera(by: delta)
             } else {
                 let yDelta: CGFloat = event.scrollingDeltaY
-                scene.rotateSelectedNode(by: yDelta)
+                sceneAdapter.rotateSelectedNode(by: yDelta)
             }
         } else {
             let zoomDelta: CGFloat = event.scrollingDeltaY * 0.01
-            if viewModel.editionType != .rotation {
-                scene.cameraController.zoomCamera(by: zoomDelta)
+            if nodeStore.editionType != .rotation {
+                sceneAdapter.zoomCamera(by: zoomDelta)
             } else {
                 let yDelta: CGFloat = event.scrollingDeltaY
-                scene.rotateSelectedNode(by: yDelta)
+                sceneAdapter.rotateSelectedNode(by: yDelta)
             }
         }
         super.scrollWheel(with: event)
     }
     
     override func otherMouseDown(with event: NSEvent) {
-        LogManager.shared.addLog("Middle mouse click detected at: \(event.locationInWindow)")
-        guard let scene = self.scene as? CanvaSpriteScene else { return }
+        logStore?.addLog("Middle mouse click detected at: \(event.locationInWindow)")
         if event.buttonNumber == 2 {
             let delta = CGPoint(
                 x: event.scrollingDeltaX,
                 y: event.scrollingDeltaY
             )
-            scene.cameraController.moveCamera(by: delta)
+            sceneAdapter.moveCamera(by: delta)
         } else {
             super.otherMouseDown(with: event)
         }
@@ -55,13 +55,17 @@ class CustomSKView: SKView {
 
 // MARK: - CustomSpriteView: SwiftUI Integration
 struct CustomSpriteView: NSViewRepresentable {
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    let sceneAdapter: SpriteSceneAdapter
+    let nodeStore: NodeStore
+    let logStore: LogStore?
     
     func makeNSView(context: Context) -> SKView {
         let skView = CustomSKView()
         skView.allowsTransparency = true
-        skView.presentScene(viewModel.spriteScene)
-        skView.viewModel = viewModel
+        skView.presentScene(sceneAdapter.skScene)
+        skView.sceneAdapter = sceneAdapter
+        skView.nodeStore = nodeStore
+        skView.logStore = logStore
         
         let magnificationGesture = NSMagnificationGestureRecognizer(target: context.coordinator,
                                                                     action: #selector(Coordinator.handleMagnification(_:)))
@@ -73,24 +77,19 @@ struct CustomSpriteView: NSViewRepresentable {
     func updateNSView(_ nsView: SKView, context: Context) { }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(spriteScene: viewModel.spriteScene, viewModel: viewModel)
+        Coordinator(sceneAdapter: sceneAdapter)
     }
     
     class Coordinator: NSObject {
-        let spriteScene: SKScene
-        let viewModel: ProcFrameViewModel
+        let sceneAdapter: SpriteSceneAdapter
         
-        init(spriteScene: SKScene, viewModel: ProcFrameViewModel) {
-            self.spriteScene = spriteScene
-            self.viewModel = viewModel
+        init(sceneAdapter: SpriteSceneAdapter) {
+            self.sceneAdapter = sceneAdapter
         }
         
         @objc func handleMagnification(_ gesture: NSMagnificationGestureRecognizer) {
-            guard let view = gesture.view,
-                  let skView = view as? SKView,
-                  let scene = skView.scene as? CanvaSpriteScene else { return }
             if gesture.state == .changed {
-                scene.cameraController.zoomCamera(by: gesture.magnification)
+                sceneAdapter.zoomCamera(by: gesture.magnification)
                 gesture.magnification = 0
             }
         }
@@ -99,20 +98,20 @@ struct CustomSpriteView: NSViewRepresentable {
 
 // MARK: - SwiftUI Wrapper
 struct SpriteCanvasView: View {
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    @ObservedObject var store: ProcFrameViewModel
+    let sceneAdapter: SpriteSceneAdapter
+    let logStore: LogStore
     
     var body: some View {
-        CustomSpriteView()
+        CustomSpriteView(sceneAdapter: sceneAdapter, nodeStore: store, logStore: logStore)
             .frame(width: 750, height: 600)
-            .onChange(of: viewModel.nodes) {
-                if viewModel.nodes.count > viewModel.previousNodeCount {
-                    viewModel.spriteScene.nodeLifecycleController.updateNodes()
-                    viewModel.isStructuralChange = false
+            .onChange(of: store.nodes) {
+                if sceneAdapter.syncNodesIfNeeded(previousCount: &store.previousNodeCount) {
+                    store.isStructuralChange = false
                 }
-                viewModel.previousNodeCount = viewModel.nodes.count
             }
-            .onChange(of: viewModel.selectedNodeID) {
-                viewModel.spriteScene.nodeSelectionController.updateHighlight(for: viewModel.selectedNodeID)
+            .onChange(of: store.selectedNodeID) {
+                sceneAdapter.updateSelectionHighlight(for: store.selectedNodeID)
             }
     }
 }

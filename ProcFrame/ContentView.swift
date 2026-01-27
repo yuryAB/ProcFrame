@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-import SpriteKit
 import AppKit
 
 struct ContentView: View {
-    @StateObject private var viewModel = ProcFrameViewModel()
+    @StateObject private var container: AppContainer
     @State private var showLogConsole: Bool = false
     @State private var actionTimelineHeight: CGFloat = 250
     
@@ -20,6 +19,10 @@ struct ContentView: View {
     
     var baseWidth: CGFloat {
         mediaPanelWidth + procEditionPanelWidth + spriteCanvasWidth
+    }
+
+    init(container: AppContainer = AppContainer()) {
+        _container = StateObject(wrappedValue: container)
     }
     
     var body: some View {
@@ -32,12 +35,14 @@ struct ContentView: View {
                     .frame(maxWidth: baseWidth + 500)
                 
                 HStack(spacing: 0) {
-                    MediaPanelView(color: Color(nsColor: .controlColor))
+                    MediaPanelView(color: Color(nsColor: .controlColor), viewModel: container.mediaPanelViewModel)
                         .frame(width: mediaPanelWidth)
                     Spacer()
-                    SpriteCanvasView()
+                    SpriteCanvasView(store: container.store,
+                                     sceneAdapter: container.spriteSceneAdapter,
+                                     logStore: container.logStore)
                     Spacer()
-                    ProcEditionPanel()
+                    ProcEditionPanel(viewModel: container.editionPanelViewModel)
                         .frame(width: procEditionPanelWidth)
                 }
                 .frame(maxWidth: .infinity)
@@ -55,7 +60,7 @@ struct ContentView: View {
                                 }
                         )
                     
-                    ActionTimelinePanelView()
+                    ActionTimelinePanelView(viewModel: container.actionTimelineViewModel)
                         .frame(height: actionTimelineHeight)
                         .frame(minWidth: baseWidth, maxWidth: baseWidth + 500)
                 }
@@ -68,7 +73,7 @@ struct ContentView: View {
                     Spacer()
                     Button(action: {
                         showLogConsole.toggle()
-                        LogManager.shared.addLog("Log console \(showLogConsole ? "aberta" : "fechada")")
+                        container.logStore.addLog("Log console \(showLogConsole ? "aberta" : "fechada")")
                     }) {
                         Image(systemName: "doc.text.magnifyingglass")
                             .foregroundColor(.white)
@@ -85,8 +90,7 @@ struct ContentView: View {
                 
                 HStack {
                     Spacer()
-                    LogConsoleView()
-                        .environmentObject(LogManager.shared)
+                    LogConsoleView(viewModel: container.logConsoleViewModel)
                         .frame(width: 400, height: 300)
                         .background(Color.black.opacity(0.8))
                         .cornerRadius(8)
@@ -101,8 +105,6 @@ struct ContentView: View {
                 print("Font Family: \(family)")
             }
         }
-        .environmentObject(viewModel)
-        .environmentObject(LogManager.shared)
     }
 }
 

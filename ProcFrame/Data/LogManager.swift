@@ -7,10 +7,9 @@
 
 
 import Foundation
-import SwiftUI
+import Combine
 
-class LogManager: ObservableObject {
-    static let shared = LogManager()
+final class LogManager: ObservableObject, LogStore {
     
     @Published var logs: [String] = []
     
@@ -21,6 +20,12 @@ class LogManager: ObservableObject {
         let logMessage = "[\(timestamp)] \(message)"
         DispatchQueue.main.async {
             self.logs.append(logMessage)
+        }
+    }
+
+    func clearLogs() {
+        DispatchQueue.main.async {
+            self.logs.removeAll()
         }
     }
 }

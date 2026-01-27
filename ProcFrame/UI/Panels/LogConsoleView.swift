@@ -9,14 +9,14 @@
 import SwiftUI
 
 struct LogConsoleView: View {
-    @EnvironmentObject var logManager: LogManager
+    @ObservedObject var viewModel: LogConsoleViewModel
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    ForEach(logManager.logs, id: \.self) { log in
+                    ForEach(viewModel.logs, id: \.self) { log in
                         Text(log)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundColor(.primary)
@@ -29,7 +29,7 @@ struct LogConsoleView: View {
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button("Limpar") {
-                        logManager.logs.removeAll()
+                        viewModel.clearLogs()
                     }
                 }
                 ToolbarItem(placement: .automatic) {

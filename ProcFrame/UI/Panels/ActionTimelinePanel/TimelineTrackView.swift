@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TimelineTrackView: View {
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    @ObservedObject var viewModel: ActionTimelineViewModel
     @Binding var timelineDuration: Double
     @Binding var currentTime: Double
     @State private var keyframes: [Double] = []
@@ -28,7 +28,7 @@ struct TimelineTrackView: View {
                         .frame(width: 70, height: 30)
                     ScrollView(showsIndicators: false) {
                         ForEach(viewModel.nodes, id: \.id) { node in
-                            TimelineThumbnailRow(node: node)
+                            TimelineThumbnailRow(viewModel: viewModel, node: node)
                         }
                     }
                     .scrollPosition($positionA)
@@ -52,6 +52,7 @@ struct TimelineTrackView: View {
                     ScrollView {
                         ForEach(viewModel.nodes, id: \.id) { node in
                             TimelineTrackRow(
+                                viewModel: viewModel,
                                 node: node,
                                 currentTime: $currentTime,
                                 keyframes: $keyframes,
@@ -101,7 +102,7 @@ struct TimelineRulerView: View {
 }
 
 struct TimelineThumbnailRow: View {
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    let viewModel: ActionTimelineViewModel
     let node: ProcNode
     
     var body: some View {
@@ -138,18 +139,18 @@ struct TimelineThumbnailRow: View {
 }
 
 struct TimelineTrackRow: View {
+    let viewModel: ActionTimelineViewModel
     let node: ProcNode
     @Binding var currentTime: Double
     @Binding var keyframes: [Double]
     @Binding var timelineDuration: Double
-    @EnvironmentObject var viewModel: ProcFrameViewModel
     
     var body: some View {
         HStack() {
             HStack() {
-                ForEach(viewModel.actionMarks.indices.filter { viewModel.actionMarks[$0].nodeID == node.id }, id: \.self) { index in
+                ForEach(viewModel.actionMarkIndices.filter { viewModel.actionMarks[$0].nodeID == node.id }, id: \.self) { index in
                     ActionTrackView(
-                        actionMark: $viewModel.actionMarks[index],
+                        actionMark: viewModel.bindingForActionMark(at: index),
                         timelineDuration: timelineDuration,
                         availableWidth: 1900
                     )

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SelectableRowView: View {
     let procNode: ProcNode
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    @EnvironmentObject var viewModel: MediaPanelViewModel
 
     var body: some View {
         ZStack(alignment: .leading) {

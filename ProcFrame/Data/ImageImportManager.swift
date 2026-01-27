@@ -7,18 +7,19 @@
 
 import AppKit
 
-class ImageImportManager {
-    static func importImages(completion: @escaping ([ImportedImage]) -> Void) {
+final class ImageImportManager: ImageImporting {
+    func importImages(completion: @escaping ([ImportedImage]) -> Void) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.png, .jpeg, .tiff]
         panel.allowsMultipleSelection = true
 
         if panel.runModal() == .OK {
             let images = panel.urls.compactMap { url -> ImportedImage? in
-                guard let fullImage = NSImage(contentsOf: url) else { return nil }
+                guard let fullImage = NSImage(contentsOf: url),
+                      let imageData = fullImage.tiffRepresentation else { return nil }
                 return ImportedImage(
                     name: url.lastPathComponent,
-                    fullImage: fullImage
+                    imageData: imageData
                 )
             }
             completion(images)

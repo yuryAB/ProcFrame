@@ -6,12 +6,11 @@
 //
 
 import Foundation
-import SwiftUI
 
 struct ImportedImage: Identifiable, Hashable {
     let id = UUID()
     let name: String
-    let fullImage: NSImage
+    let imageData: Data
 
     static func == (lhs: ImportedImage, rhs: ImportedImage) -> Bool {
         return lhs.id == rhs.id

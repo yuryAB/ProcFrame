@@ -10,11 +10,9 @@ import GameplayKit
 
 class SelectionState: GKState {
     weak var scene: CanvaSpriteScene?
-    private var viewModel: ProcFrameViewModel
     
-    init(scene: CanvaSpriteScene, viewModel: ProcFrameViewModel) {
+    init(scene: CanvaSpriteScene) {
         self.scene = scene
-        self.viewModel = viewModel
     }
     
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
@@ -28,11 +26,9 @@ class SelectionState: GKState {
 
 class RotationState: GKState {
     weak var scene: CanvaSpriteScene?
-    private var viewModel: ProcFrameViewModel
     
-    init(scene: CanvaSpriteScene, viewModel: ProcFrameViewModel) {
+    init(scene: CanvaSpriteScene) {
         self.scene = scene
-        self.viewModel = viewModel
     }
     
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
@@ -46,11 +42,9 @@ class RotationState: GKState {
 
 class ParentState: GKState {
     weak var scene: CanvaSpriteScene?
-    private var viewModel: ProcFrameViewModel
     
-    init(scene: CanvaSpriteScene, viewModel: ProcFrameViewModel) {
+    init(scene: CanvaSpriteScene) {
         self.scene = scene
-        self.viewModel = viewModel
     }
     
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
@@ -68,11 +62,9 @@ class ParentState: GKState {
 
 class DepthState: GKState {
     weak var scene: CanvaSpriteScene?
-    private var viewModel: ProcFrameViewModel
     
-    init(scene: CanvaSpriteScene, viewModel: ProcFrameViewModel) {
+    init(scene: CanvaSpriteScene) {
         self.scene = scene
-        self.viewModel = viewModel
     }
     
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {

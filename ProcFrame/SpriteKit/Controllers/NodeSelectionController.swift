@@ -30,7 +30,7 @@ class NodeSelectionController {
                   spriteNode != scene.targetNode else { continue }
             
             if scene.stateMachine.currentState is DepthState {
-                scene.viewModel.editionType = .selection
+                scene.nodeStore.editionType = .selection
                 scene.stateMachine.enter(SelectionState.self)
             }
 
@@ -50,7 +50,7 @@ class NodeSelectionController {
         scene.targetNode?.removeOutline()
         scene.targetNode = spriteNode
         updateAnchorPointIndicator(for: spriteNode)
-        scene.viewModel.selectedNodeID = spriteNode.nodeID
+        scene.nodeStore.selectedNodeID = spriteNode.nodeID
         setHighlight(to: scene.targetNode)
     }
     
@@ -62,7 +62,7 @@ class NodeSelectionController {
         }
         
         guard let tappedNodeID = spriteNode.nodeID,
-              let procNode = scene.viewModel.nodes.first(where: { $0.id == tappedNodeID }),
+              let procNode = scene.nodeStore.nodes.first(where: { $0.id == tappedNodeID }),
               procNode.parentID == nil else { return }
         
         spriteNode.zPosition = 1
@@ -75,14 +75,14 @@ class NodeSelectionController {
         removeParentingHighlightsFromTarget()
         deselectCurrentNode()
         removeAnchorPointIndicator()
-        scene.viewModel.editionType = .selection
+        scene.nodeStore.editionType = .selection
         scene.stateMachine.enter(SelectionState.self)
     }
     
     private func deselectCurrentNode() {
         scene.targetNode?.removeOutline()
         scene.targetNode = nil
-        scene.viewModel.selectedNodeID = nil
+        scene.nodeStore.selectedNodeID = nil
         removeAnchorPointIndicator()
         scene.rotationIndicator?.removeFromParent()
         scene.rotationIndicator = nil
@@ -120,7 +120,7 @@ class NodeSelectionController {
     // MARK: - Highlight Methods
     
     func setHighlight(to node: SKSpriteNode?) {
-        switch scene.viewModel.editionType {
+        switch scene.nodeStore.editionType {
         case .selection:
             node?.drawOutline(color: .magenta)
         case .rotation:
@@ -171,7 +171,7 @@ class NodeSelectionController {
     }
     
     func updateAnchorPoint(for node: SKSpriteNode, with indicator: SKSpriteNode, nodeID: UUID) {
-        guard let index = scene.viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        guard let index = scene.nodeStore.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
         
         let oldAnchor = node.anchorPoint
         let dragOffset = indicator.position
@@ -196,8 +196,8 @@ class NodeSelectionController {
         node.position.y += globalCompensation.y
         node.anchorPoint = newAnchor
         
-        scene.viewModel.nodes[index].anchorPoint = newAnchor
-        scene.viewModel.nodes[index].position = node.position
+        scene.nodeStore.nodes[index].anchorPoint = newAnchor
+        scene.nodeStore.nodes[index].position = node.position
         
         setHighlight(to: node)
     }

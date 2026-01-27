@@ -12,7 +12,7 @@ import GameplayKit
 
 class CanvaSpriteScene: SKScene {
     private var cameraNode = SKCameraNode()
-    private(set) var viewModel: ProcFrameViewModel
+    private(set) var nodeStore: NodeStore
     
     var rotationIndicator: SKShapeNode?
     var stateMachine: GKStateMachine!
@@ -25,8 +25,8 @@ class CanvaSpriteScene: SKScene {
     var nodeLifecycleController: NodeLifecycleController!
     var nodeSelectionController: NodeSelectionController!
 
-    init(size: CGSize, viewModel: ProcFrameViewModel) {
-        self.viewModel = viewModel
+    init(size: CGSize, nodeStore: NodeStore) {
+        self.nodeStore = nodeStore
         super.init(size: size)
     }
     
@@ -39,10 +39,10 @@ class CanvaSpriteScene: SKScene {
         cameraController = CameraController(cameraNode: cameraNode)
         cameraController.setupCamera(in: self)
         stateMachine = GKStateMachine(states: [
-            SelectionState(scene: self, viewModel: viewModel),
-            RotationState(scene: self, viewModel: viewModel),
-            ParentState(scene: self, viewModel: viewModel),
-            DepthState(scene: self, viewModel: viewModel)
+            SelectionState(scene: self),
+            RotationState(scene: self),
+            ParentState(scene: self),
+            DepthState(scene: self)
         ])
         
         stateMachine.enter(SelectionState.self)
@@ -71,14 +71,14 @@ extension CanvaSpriteScene {
 // MARK: - Aux methods
 extension CanvaSpriteScene {
     func rotateSelectedNode(by deltaRotation: CGFloat) {
-        guard viewModel.editionType == .rotation,
+        guard nodeStore.editionType == .rotation,
               let node = targetNode,
               let nodeID = node.nodeID,
-              let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+              let index = nodeStore.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
         
         let deltaRadians = deltaRotation * (.pi / 180)
         node.zRotation = (node.zRotation + deltaRadians).truncatingRemainder(dividingBy: .pi * 2)
-        viewModel.nodes[index].rotation = node.zRotation
+        nodeStore.nodes[index].rotation = node.zRotation
     }
 
     override func keyDown(with event: NSEvent) {
@@ -86,26 +86,26 @@ extension CanvaSpriteScene {
     }
 
     func handleSelectionState() {
-        viewModel.editionType = .selection
+        nodeStore.editionType = .selection
         stateMachine.enter(SelectionState.self)
     }
     
     func handleRotationState() {
-        viewModel.editionType = .rotation
+        nodeStore.editionType = .rotation
         stateMachine.enter(RotationState.self)
     }
     
     func handleParentingState() {
-        viewModel.editionType = .parent
+        nodeStore.editionType = .parent
         stateMachine.enter(ParentState.self)
     }
     
     func moveTargetNode(direction: DepthOrientation) {
         guard let selectedNode = targetNode,
               let nodeID = selectedNode.nodeID,
-              let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+              let index = nodeStore.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
         
-        viewModel.editionType = .depth
+        nodeStore.editionType = .depth
         stateMachine.enter(DepthState.self)
         
         switch direction {
@@ -115,8 +115,8 @@ extension CanvaSpriteScene {
             selectedNode.zPosition -= 1
         }
         
-        viewModel.nodes[index].zPosition = selectedNode.zPosition
-        viewModel.reorderNodesByZPosition()
+        nodeStore.nodes[index].zPosition = selectedNode.zPosition
+        nodeStore.reorderNodesByZPosition()
     }
 
     func handleNodeSelection(at location: CGPoint) {

@@ -33,9 +33,9 @@ class InputController {
         }
         guard let selectedNode = scene.targetNode,
               let nodeID = selectedNode.nodeID,
-              let index = scene.viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
-        scene.viewModel.nodes[index].position = selectedNode.position
-        scene.viewModel.nodes[index].anchorPoint = selectedNode.anchorPoint
+              let index = scene.nodeStore.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        scene.nodeStore.nodes[index].position = selectedNode.position
+        scene.nodeStore.nodes[index].anchorPoint = selectedNode.anchorPoint
     }
     
     func handleKeyDown(event: NSEvent) {

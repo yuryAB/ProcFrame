@@ -9,11 +9,11 @@ import SwiftUI
 
 struct MediaPanelView: View {
     let color: Color
-    @EnvironmentObject var viewModel: ProcFrameViewModel
+    @ObservedObject var viewModel: MediaPanelViewModel
 
     var body: some View {
         VStack(spacing: 3) {
-            ImportButtonView(action: importImages)
+            ImportButtonView(action: viewModel.importImages)
             nodeList()
             //actionButtons()
         }
@@ -26,6 +26,7 @@ struct MediaPanelView: View {
         List {
             ForEach(viewModel.nodes, id: \.id) { procNode in
                 SelectableRowView(procNode: procNode)
+                    .environmentObject(viewModel)
             }
         }
         .cornerRadius(8)
@@ -37,7 +38,7 @@ struct MediaPanelView: View {
             SelectAllButtonView(
                 isChecked: Binding(
                     get: { viewModel.selectedNodeID != nil },
-                    set: { isChecked in toggleSelectAll(isChecked) }
+                    set: { isChecked in viewModel.toggleSelectAll(isChecked) }
                 )
             )
             .disabled(viewModel.nodes.isEmpty)
@@ -48,20 +49,5 @@ struct MediaPanelView: View {
         .frame(maxWidth: .infinity)
         .background(Color(nsColor: .controlBackgroundColor))
         .cornerRadius(8)
-    }
-    
-    private func toggleSelectAll(_ isChecked: Bool) {
-        viewModel.selectedNodeID = isChecked ? viewModel.nodes.first?.id : nil
-    }
-    
-    private func importImages() {
-        ImageImportManager.importImages { newImages in
-            let maxZPosition = viewModel.nodes.map { $0.zPosition }.max() ?? 0
-            let newNodes = newImages.enumerated().map { index, image in
-                ProcNode(image: image, zPosition: CGFloat(Int(maxZPosition) + index + 1))
-            }
-            viewModel.isStructuralChange = true
-            viewModel.nodes.append(contentsOf: newNodes)
-        }
     }
 }

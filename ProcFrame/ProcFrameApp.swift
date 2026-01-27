@@ -13,7 +13,7 @@ struct ProcFrameApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(container: AppContainer())
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }
