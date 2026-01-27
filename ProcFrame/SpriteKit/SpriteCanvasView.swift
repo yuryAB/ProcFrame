@@ -103,7 +103,7 @@ struct SpriteCanvasView: View {
     
     var body: some View {
         CustomSpriteView()
-            .frame(width: 700, height: 600)
+            .frame(width: 750, height: 600)
             .onChange(of: viewModel.nodes) {
                 if viewModel.nodes.count > viewModel.previousNodeCount {
                     viewModel.spriteScene.nodeLifecycleController.updateNodes()

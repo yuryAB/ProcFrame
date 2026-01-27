@@ -43,6 +43,44 @@ extension SKSpriteNode {
         
         return texture.hasAlpha(at: texturePoint)
     }
+    
+    func parentingLines() {
+        guard !children.isEmpty else { return }
+        
+        childNode(withName: "parentingLines")?.removeFromParent()
+        
+        let lineContainer = SKNode()
+        lineContainer.name = "parentingLines"
+        
+        for child in children {
+            guard let childNode = child as? SKSpriteNode,
+                  childNode.isEditionNode() else { continue }
+
+            let startPoint = CGPoint.zero
+            let endPoint = childNode.position
+            let path = CGMutablePath()
+            
+            path.move(to: startPoint)
+            path.addLine(to: endPoint)
+
+            let lineNode = SKShapeNode(path: path)
+            lineNode.strokeColor = .black
+            lineNode.lineWidth = 10
+            lineNode.zPosition = 20
+
+            lineContainer.addChild(lineNode)
+        }
+        
+        self.addChild(lineContainer)
+    }
+
+    func removeParentingLines() {
+        self.childNode(withName: "parentingLines")?.removeFromParent()
+    }
+    
+    func isEditionNode() -> Bool {
+        return name?.contains("-EDT-") ?? false
+    }
 }
 
 extension SKTexture {

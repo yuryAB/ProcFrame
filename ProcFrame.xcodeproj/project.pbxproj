@@ -6,13 +6,49 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXCopyFilesBuildPhase section */
+		72B2D7592D8A2FAD00279E7F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Fonts;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		72234D842D445CB30009A9A6 /* ProcFrame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProcFrame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		72B2D7582D8A2EFF00279E7F /* Exceptions for "ProcFrame" folder in "ProcFrame" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Fonts/Inter-Italic-VariableFont_opsz,wght.ttf",
+			);
+			target = 72234D832D445CB30009A9A6 /* ProcFrame */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		72B2D75B2D8A2FD100279E7F /* Exceptions for "ProcFrame" folder in "Copy Files" phase from "ProcFrame" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 72B2D7592D8A2FAD00279E7F /* CopyFiles */;
+			membershipExceptions = (
+				"Fonts/Inter-Italic-VariableFont_opsz,wght.ttf",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		72234D862D445CB30009A9A6 /* ProcFrame */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				72B2D7582D8A2EFF00279E7F /* Exceptions for "ProcFrame" folder in "ProcFrame" target */,
+				72B2D75B2D8A2FD100279E7F /* Exceptions for "ProcFrame" folder in "Copy Files" phase from "ProcFrame" target */,
+			);
 			path = ProcFrame;
 			sourceTree = "<group>";
 		};
@@ -55,6 +91,7 @@
 				72234D802D445CB30009A9A6 /* Sources */,
 				72234D812D445CB30009A9A6 /* Frameworks */,
 				72234D822D445CB30009A9A6 /* Resources */,
+				72B2D7592D8A2FAD00279E7F /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -258,6 +295,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ProcFrame/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Proc Frame";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -288,6 +326,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ProcFrame/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Proc Frame";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

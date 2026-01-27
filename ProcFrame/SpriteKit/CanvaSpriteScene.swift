@@ -101,8 +101,10 @@ extension CanvaSpriteScene {
     }
     
     func moveTargetNode(direction: DepthOrientation) {
-        guard let selectedNode = targetNode, let nodeID = selectedNode.nodeID,
+        guard let selectedNode = targetNode,
+              let nodeID = selectedNode.nodeID,
               let index = viewModel.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        
         viewModel.editionType = .depth
         stateMachine.enter(DepthState.self)
         

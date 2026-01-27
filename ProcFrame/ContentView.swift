@@ -7,10 +7,20 @@
 
 import SwiftUI
 import SpriteKit
+import AppKit
 
 struct ContentView: View {
     @StateObject private var viewModel = ProcFrameViewModel()
     @State private var showLogConsole: Bool = false
+    @State private var actionTimelineHeight: CGFloat = 250
+    
+    let mediaPanelWidth: CGFloat = 200
+    let procEditionPanelWidth: CGFloat = 250
+    let spriteCanvasWidth: CGFloat = 750
+    
+    var baseWidth: CGFloat {
+        mediaPanelWidth + procEditionPanelWidth + spriteCanvasWidth
+    }
     
     var body: some View {
         ZStack {
@@ -19,27 +29,36 @@ struct ContentView: View {
             VStack(spacing: 2) {
                 PanelView(color: Color(nsColor: .controlColor))
                     .frame(height: 40)
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: baseWidth + 500)
                 
                 HStack(spacing: 0) {
                     MediaPanelView(color: Color(nsColor: .controlColor))
-                        .frame(width: 160)
-                    
+                        .frame(width: mediaPanelWidth)
                     Spacer()
-                    
                     SpriteCanvasView()
-                    
                     Spacer()
-                    
                     ProcEditionPanel()
-                        .frame(width: 300)
+                        .frame(width: procEditionPanelWidth)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 5)
                 
-                PanelView(color: Color(nsColor: .controlColor))
-                    .frame(height: 120)
-                    .frame(maxWidth: .infinity)
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .frame(height: 5)
+                        .foregroundColor(.gray)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    let newHeight = actionTimelineHeight - value.translation.height
+                                    actionTimelineHeight = max(100, min(newHeight, 500))
+                                }
+                        )
+                    
+                    ActionTimelinePanelView()
+                        .frame(height: actionTimelineHeight)
+                        .frame(minWidth: baseWidth, maxWidth: baseWidth + 500)
+                }
             }
             .frame(maxHeight: .infinity)
             .padding()
@@ -76,6 +95,10 @@ struct ContentView: View {
                         .padding(.trailing, 20)
                         .transition(.move(edge: .top))
                 }
+            }
+        } .onAppear(){
+            for family in NSFontManager.shared.availableFontFamilies {
+                print("Font Family: \(family)")
             }
         }
         .environmentObject(viewModel)

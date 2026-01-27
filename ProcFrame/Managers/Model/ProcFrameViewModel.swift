@@ -15,12 +15,22 @@ class ProcFrameViewModel: ObservableObject {
     @Published var isStructuralChange = false
     @Published var notificationMessage: String?
     @Published var notificationType: NotificationType?
+    @Published var actionMarks: [ActionMark] = []
     @Published var editionType: EditionType = .selection
     var previousNodeCount: Int = 0
     
     lazy var spriteScene: CanvaSpriteScene = {
         CanvaSpriteScene(size: CGSize(width: 650, height: 550), viewModel: self)
     }()
+    
+    func addActionMark(for nodeID: UUID, startTime: Double, duration: Double) {
+        let newActionMark = ActionMark(
+            nodeID: nodeID,
+            startTime: startTime,
+            duration: duration
+        )
+        actionMarks.append(newActionMark)
+    }
     
     func reorderNodesByZPosition() {
         var zPositionMap: [UUID: CGFloat] = [:]

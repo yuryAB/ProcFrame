@@ -25,50 +25,58 @@ class NodeSelectionController {
             }
             
             guard let spriteNode = node as? SKSpriteNode,
-                  spriteNode.name?.contains("-EDT-") == true,
-                  spriteNode.isPointVisible(location) else {
-                continue
-            }
-            
-            if spriteNode == scene.targetNode { return }
+                  spriteNode.isEditionNode(),
+                  spriteNode.isPointVisible(location),
+                  spriteNode != scene.targetNode else { continue }
             
             if scene.stateMachine.currentState is DepthState {
                 scene.viewModel.editionType = .selection
                 scene.stateMachine.enter(SelectionState.self)
             }
-            
-            switch scene.stateMachine.currentState {
-            case is SelectionState, is RotationState:
-                scene.targetNode?.removeOutline()
-                scene.targetNode = spriteNode
-                updateAnchorPointIndicator(for: spriteNode)
-                scene.viewModel.selectedNodeID = spriteNode.nodeID
-                setHighlight(to: scene.targetNode)
-            case is ParentState:
-                if scene.targetNode == nil {
-                    scene.targetNode = spriteNode
-                    setHighlightToTargetAndChildren()
-                    return
-                }
-                guard let tappedNodeID = spriteNode.nodeID,
-                      let procNode = scene.viewModel.nodes.first(where: { $0.id == tappedNodeID }) else {
-                    return
-                }
-                if procNode.parentID != nil { return }
-                
-                spriteNode.zPosition = 1
-                scene.targetNode?.adoptChild(spriteNode, from: scene)
-                setHighlight(to: spriteNode)
-                scene.nodeLifecycleController.updateParenting(forParent: scene.targetNode!, child: spriteNode)
-            default:
-                break
+
+            if scene.stateMachine.currentState is ParentState {
+                handleParentingSelection(with: spriteNode)
+                return
             }
-            
+
+            handleStandardSelection(for: spriteNode)
             return
         }
         
+        clearSelectionAndSwitchToDefault()
+    }
+    
+    private func handleStandardSelection(for spriteNode: SKSpriteNode) {
+        scene.targetNode?.removeOutline()
+        scene.targetNode = spriteNode
+        updateAnchorPointIndicator(for: spriteNode)
+        scene.viewModel.selectedNodeID = spriteNode.nodeID
+        setHighlight(to: scene.targetNode)
+    }
+    
+    private func handleParentingSelection(with spriteNode: SKSpriteNode) {
+        if scene.targetNode == nil {
+            scene.targetNode = spriteNode
+            setHighlightToTargetAndChildren()
+            return
+        }
+        
+        guard let tappedNodeID = spriteNode.nodeID,
+              let procNode = scene.viewModel.nodes.first(where: { $0.id == tappedNodeID }),
+              procNode.parentID == nil else { return }
+        
+        spriteNode.zPosition = 1
+        scene.targetNode?.adoptChild(spriteNode, from: scene)
+        setHighlight(to: spriteNode)
+        scene.nodeLifecycleController.updateParenting(forParent: scene.targetNode!, child: spriteNode)
+    }
+    
+    private func clearSelectionAndSwitchToDefault() {
+        removeParentingHighlightsFromTarget()
         deselectCurrentNode()
         removeAnchorPointIndicator()
+        scene.viewModel.editionType = .selection
+        scene.stateMachine.enter(SelectionState.self)
     }
     
     private func deselectCurrentNode() {
@@ -133,7 +141,7 @@ class NodeSelectionController {
         guard let targetNode = scene.targetNode else { return }
         setHighlight(to: targetNode)
         for child in targetNode.children {
-            if let targetChild = child as? SKSpriteNode, targetChild.name?.contains("-EDT-") == true {
+            if let targetChild = child as? SKSpriteNode, targetChild.isEditionNode() {
                 setHighlight(to: targetChild)
             }
         }
