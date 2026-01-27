@@ -26,8 +26,11 @@ class NodeSelectionController {
             
             guard let spriteNode = node as? SKSpriteNode,
                   spriteNode.isEditionNode(),
-                  spriteNode.isPointVisible(location),
-                  spriteNode != scene.targetNode else { continue }
+                  spriteNode.isPointVisible(location) else { continue }
+
+            if spriteNode == scene.targetNode {
+                return
+            }
             
             if scene.stateMachine.currentState is DepthState {
                 scene.nodeStore.editionType = .selection
