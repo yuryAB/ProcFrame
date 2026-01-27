@@ -20,13 +20,19 @@ final class SpriteSceneAdapter {
     }
 
     @discardableResult
-    func syncNodesIfNeeded(previousCount: inout Int) -> Bool {
-        if nodeStore.nodes.count > previousCount {
+    func syncNodesIfNeeded(previousCount: inout Int, forceUpdate: Bool = false) -> Bool {
+        let nodeCount = nodeStore.nodes.count
+        if nodeCount > previousCount {
             scene.nodeLifecycleController.updateNodes()
-            previousCount = nodeStore.nodes.count
+            previousCount = nodeCount
             return true
         }
-        previousCount = nodeStore.nodes.count
+        if forceUpdate {
+            scene.nodeLifecycleController.updateNodeZPositions()
+            previousCount = nodeCount
+            return true
+        }
+        previousCount = nodeCount
         return false
     }
 

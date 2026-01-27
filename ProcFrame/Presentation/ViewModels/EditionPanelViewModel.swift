@@ -26,6 +26,10 @@ final class EditionPanelViewModel: ObservableObject {
         store.notificationType
     }
 
+    func updateZPosition(for nodeID: UUID, to newValue: CGFloat) {
+        store.setNodeZPosition(nodeID: nodeID, to: newValue)
+    }
+
     func selectedProcNodeBinding() -> Binding<ProcNode>? {
         guard let selectedID = store.selectedNodeID,
               let index = store.nodes.firstIndex(where: { $0.id == selectedID }) else { return nil }

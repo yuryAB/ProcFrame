@@ -7,6 +7,7 @@
 
 
 import Foundation
+import CoreGraphics
 
 class ProcFrameViewModel: ObservableObject, NodeStore {
     @Published var nodes: [ProcNode] = []
@@ -28,8 +29,29 @@ class ProcFrameViewModel: ObservableObject, NodeStore {
     }
     
     func reorderNodesByZPosition() {
+        ResolveZPositionConflicts.run(nodes: &nodes)
         ReorderNodesByZPosition.run(nodes: &nodes)
         isStructuralChange = true
+    }
+
+    func setNodeZPosition(nodeID: UUID, to newZPosition: CGFloat) {
+        guard let sourceIndex = nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        let currentZPosition = nodes[sourceIndex].zPosition
+        guard currentZPosition != newZPosition else { return }
+
+        if let targetIndex = nodes.firstIndex(where: { $0.zPosition == newZPosition && $0.id != nodeID }) {
+            nodes[targetIndex].zPosition = currentZPosition
+        }
+
+        nodes[sourceIndex].zPosition = newZPosition
+        reorderNodesByZPosition()
+    }
+
+    func moveNodeZPosition(nodeID: UUID, step: Int) {
+        guard step != 0 else { return }
+        guard let sourceIndex = nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+        let newZPosition = nodes[sourceIndex].zPosition + CGFloat(step)
+        setNodeZPosition(nodeID: nodeID, to: newZPosition)
     }
     
     func findParentNodes() -> [ProcNode] {
@@ -45,6 +67,7 @@ class ProcFrameViewModel: ObservableObject, NodeStore {
         notificationMessage = message
         notificationType = type
     }
+
 }
 
 extension ProcFrameViewModel {

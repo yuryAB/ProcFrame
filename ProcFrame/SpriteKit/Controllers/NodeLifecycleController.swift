@@ -18,12 +18,7 @@ class NodeLifecycleController {
     }
     
     func updateNodes() {
-        var existingNodes: [UUID: SKSpriteNode] = [:]
-        for case let sprite as SKSpriteNode in scene.children {
-            if let id = sprite.nodeID {
-                existingNodes[id] = sprite
-            }
-        }
+        var existingNodes = collectSpriteNodes()
         
         var newTargetNode: SKSpriteNode?
         
@@ -48,6 +43,16 @@ class NodeLifecycleController {
             scene.nodeSelectionController.setHighlight(to: selectedNode)
             scene.nodeSelectionController.updateAnchorPointIndicator(for: selectedNode)
             scene.targetNode = selectedNode
+        }
+    }
+
+    func updateNodeZPositions() {
+        let existingNodes = collectSpriteNodes()
+
+        for procNode in nodeStore.nodes {
+            if let spriteNode = existingNodes[procNode.id] {
+                spriteNode.zPosition = procNode.zPosition
+            }
         }
     }
     
@@ -111,5 +116,22 @@ class NodeLifecycleController {
         } else {
             nodeStore.nodes[index].parentID = nil
         }
+    }
+
+    private func collectSpriteNodes() -> [UUID: SKSpriteNode] {
+        var collected: [UUID: SKSpriteNode] = [:]
+
+        func visit(_ node: SKNode) {
+            if let spriteNode = node as? SKSpriteNode,
+               let id = spriteNode.nodeID {
+                collected[id] = spriteNode
+            }
+            for child in node.children {
+                visit(child)
+            }
+        }
+
+        visit(scene)
+        return collected
     }
 }

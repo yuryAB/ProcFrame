@@ -37,10 +37,10 @@ final class MediaPanelViewModel: ObservableObject {
             guard let self else { return }
             let maxZPosition = self.store.nodes.map { $0.zPosition }.max() ?? 0
             let newNodes = newImages.enumerated().map { index, image in
-                ProcNode(image: image, zPosition: CGFloat(Int(maxZPosition) + index + 1))
+                ProcNode(image: image, zPosition: maxZPosition + CGFloat(index) + 1)
             }
-            self.store.isStructuralChange = true
             self.store.nodes.append(contentsOf: newNodes)
+            self.store.reorderNodesByZPosition()
         }
     }
 }

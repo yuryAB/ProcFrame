@@ -102,21 +102,13 @@ extension CanvaSpriteScene {
     
     func moveTargetNode(direction: DepthOrientation) {
         guard let selectedNode = targetNode,
-              let nodeID = selectedNode.nodeID,
-              let index = nodeStore.nodes.firstIndex(where: { $0.id == nodeID }) else { return }
+              let nodeID = selectedNode.nodeID else { return }
         
         nodeStore.editionType = .depth
         stateMachine.enter(DepthState.self)
-        
-        switch direction {
-        case .forward:
-            selectedNode.zPosition += 1
-        case .backward:
-            selectedNode.zPosition -= 1
-        }
-        
-        nodeStore.nodes[index].zPosition = selectedNode.zPosition
-        nodeStore.reorderNodesByZPosition()
+
+        let step = direction == .forward ? 1 : -1
+        nodeStore.moveNodeZPosition(nodeID: nodeID, step: step)
     }
 
     func handleNodeSelection(at location: CGPoint) {

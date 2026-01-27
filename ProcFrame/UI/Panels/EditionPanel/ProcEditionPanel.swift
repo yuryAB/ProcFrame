@@ -156,9 +156,7 @@ struct ProcEditionPanel: View {
         Binding<CGFloat>(
             get: { nodeBinding.wrappedValue.zPosition },
             set: { newValue in
-                var node = nodeBinding.wrappedValue
-                node.zPosition = newValue
-                nodeBinding.wrappedValue = node
+                viewModel.updateZPosition(for: nodeBinding.wrappedValue.id, to: newValue)
             }
         )
     }

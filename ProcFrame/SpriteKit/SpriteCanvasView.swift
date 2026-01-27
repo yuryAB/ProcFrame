@@ -106,7 +106,7 @@ struct SpriteCanvasView: View {
         CustomSpriteView(sceneAdapter: sceneAdapter, nodeStore: store, logStore: logStore)
             .frame(width: 750, height: 600)
             .onChange(of: store.nodes) {
-                if sceneAdapter.syncNodesIfNeeded(previousCount: &store.previousNodeCount) {
+                if sceneAdapter.syncNodesIfNeeded(previousCount: &store.previousNodeCount, forceUpdate: store.isStructuralChange) {
                     store.isStructuralChange = false
                 }
             }
